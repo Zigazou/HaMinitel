@@ -25,8 +25,5 @@ library
         Minitel.Generateur
         Minitel.Queue
         Minitel.Minitel
-    build-depends:
-        base ==4.5.*
-        bytestring ==0.9.*
-        serialport ==0.4.*
+    build-depends: base ==4.5.*, bytestring ==0.9.*, serialport ==0.4.*
     ghc-options: -threaded
