@@ -61,8 +61,8 @@ seqMode Mixte VideoTex            = (pro2 ++ mixte2, [sep, 0x71])
 seqMode Mixte TeleInformatique    = seqMode VideoTex TeleInformatique
 
 seqString :: ModeMinitel -> String -> SeqMinitel
-seqString VideoTex s = concat $ map versVideotex s
-seqString _ s = concat $ map versAutre s
+seqString VideoTex s = concatMap versVideotex s
+seqString _ s = concatMap versAutre s
 
 seqIdentification :: SeqAppel
 seqIdentification = (pro1 ++ [enqrom], 5)
@@ -80,10 +80,10 @@ seqClavierMinuscule True  = (pro2 ++ [start, minuscules], longueurPro2)
 seqClavierMinuscule False = (pro2 ++ [stop , minuscules], longueurPro2)
 
 seqAvantPlan :: (ToCouleurMinitel a) => a -> SeqMinitel
-seqAvantPlan couleur = [esc, 0x40 + (toCouleurMinitel couleur)]
+seqAvantPlan couleur = [esc, 0x40 + toCouleurMinitel couleur]
 
 seqArrierePlan :: (ToCouleurMinitel a) => a -> SeqMinitel
-seqArrierePlan couleur = [esc, 0x50 + (toCouleurMinitel couleur)]
+seqArrierePlan couleur = [esc, 0x50 + toCouleurMinitel couleur]
 
 seqPosition :: Integer -> Integer -> SeqMinitel
 seqPosition 1 1 = [rs]
@@ -186,11 +186,11 @@ seqSelectionJeu G0 = [esc, 0x28, 0x20, 0x42]
 seqSelectionJeu G1 = [esc, 0x29, 0x20, 0x43]
 
 seqDessin :: [String] -> SeqMinitel
-seqDessin dessin = (map bits' $ (multiSplit 6 . concat) dessin) ++ [0x30]
+seqDessin dessin = map bits' ((multiSplit 6 . concat) dessin) ++ [0x30]
     where bits = foldl (\a v -> 2 * a + (if v == '1' then 1 else 0)) 0
           bits' s = 0x40 + bits s * (if length s == 2 then 16 else 1)
           multiSplit _ [] = []
-          multiSplit nb s = start:(multiSplit nb end)
+          multiSplit nb s = start:multiSplit nb end
               where (start, end) = splitAt nb s
 
 seqDessins :: [[String]] -> [SeqMinitel]

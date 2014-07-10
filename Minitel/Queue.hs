@@ -8,13 +8,13 @@ import Control.Concurrent.MVar
 type Queue = MVar SeqMinitel
 
 put :: Queue -> SeqMinitel -> IO ()
-put queue element = do
+put queue element =
     tryTakeMVar queue >>= \a -> case a of
         Just v  -> putMVar queue $ v ++ element
         Nothing -> putMVar queue element
 
 get :: Queue -> IO SeqMinitel
-get queue = do
+get queue =
     tryTakeMVar queue >>= \a -> case a of
         Just v  -> return v
         Nothing -> return []
