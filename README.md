@@ -39,3 +39,4 @@ Minitel screen:
         m <<< seqString VideoTex "Hello world!"
 
         flush (serial m)
+
