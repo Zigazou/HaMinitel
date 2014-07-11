@@ -3,21 +3,18 @@ module Minitel.Queue where
 
 import Minitel.Sequence
 import qualified Data.ByteString as B
-import Control.Concurrent.MVar
+import Control.Concurrent.STM.TQueue
+import Control.Concurrent.STM
+import Control.Monad
 
-type Queue = MVar SeqMinitel
+type Queue = TQueue Integer
 
-put :: Queue -> SeqMinitel -> IO ()
-put queue element =
-    tryTakeMVar queue >>= \a -> case a of
-        Just v  -> putMVar queue $ v ++ element
-        Nothing -> putMVar queue element
+putSeq :: Queue -> SeqMinitel -> IO ()
+putSeq q s = forM_ s $ \ x -> do put q x
 
-get :: Queue -> IO SeqMinitel
-get queue =
-    tryTakeMVar queue >>= \a -> case a of
-        Just v  -> return v
-        Nothing -> return []
+put :: Queue -> Integer -> IO ()
+put q v = (atomically . writeTQueue q) v
 
-getW :: Queue -> IO SeqMinitel
-getW = takeMVar
+get :: Queue -> IO Integer
+get q = (atomically . readTQueue) q
+

@@ -1,9 +1,9 @@
 module Minitel.Constantes where
 
--- Définitions de constantes de l’univers Minitel
+-- Definitions de constantes de l'univers Minitel
 import Data.Char
 
--- Codes de contrôles de la norme ASCII
+-- Codes de controles de la norme ASCII
 nul = 0x00 -- null
 soh = 0x01 -- start of heading
 stx = 0x02 -- start of text
@@ -111,7 +111,7 @@ b300 = 0x52
 -- eten = 0x41
 -- c0 = 0x43
 
--- Codes de réception
+-- Codes de reception
 rcptEcran = 0x58
 rcptClavier = 0x59
 rcptModem = 0x5a
@@ -119,7 +119,7 @@ rcptPrise = 0x5b
 rcptTelephonique = 0x5c
 rcptLogiciel = 0x5d
 
--- Codes d’émission
+-- Codes d'emission
 emetEcran = 0x50
 emetClavier = 0x51
 emetModem = 0x52
@@ -147,7 +147,7 @@ majDroite = csi ++ [0x34, 0x68]
 
 ctrlGauche = 0x7f
 
--- Touche Entrée/Retour chariot
+-- Touche Entree/Retour chariot
 entree      = 0x0d
 majEntree  = csi ++ [0x48]
 ctrlEntree = csi ++ [0x32, 0x4a]
@@ -172,7 +172,7 @@ data Capacite = Capacite {
     vitesse :: Int,
     colonnes80 :: Bool,
     caracteres :: Bool
-} deriving (Show)  
+} deriving (Show)
 
 typeMinitels = [
     Capacite 'c' "Minitel 1"         False "ABCD"   1200 False False,
@@ -191,11 +191,11 @@ typeMinitels = [
     Capacite 'z' "Minitel 12"        True  "Azerty" 9600 True  True
     ]
 
--- Capacités les plus basiques du Minitel
+-- Capacites les plus basiques du Minitel
 minitelBasique =
     Capacite '*' "Minitel inconnu"   False "ABCD"   1200 False False
 
--- Codes d’identification du constructeur
+-- Codes d'identification du constructeur
 constructeurs = [
     ('A', "Matra"),
     ('B', "RTIC"),
@@ -211,7 +211,7 @@ constructeurs = [
     ('L', "Desmet")
     ]
 
--- Tables de conversion des caractères spéciaux
+-- Tables de conversion des caracteres speciaux
 versVideotex :: Char -> [Integer]
 versVideotex c 
     | c == '£'  = [0x19, 0x23]
