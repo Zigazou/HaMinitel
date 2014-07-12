@@ -1,9 +1,8 @@
-module Minitel.Constantes where
+module Minitel.Constants where
 
--- Definitions de constantes de l'univers Minitel
 import Data.Char
 
--- Codes de controles de la norme ASCII
+-- ASCII control codes
 nul = 0x00 -- null
 soh = 0x01 -- start of heading
 stx = 0x02 -- start of text
@@ -43,12 +42,13 @@ ss3 = 0x1d -- SS3
 rs  = 0x1e -- record separator
 us  = 0x1f -- unit separator
 
-pro1 = [esc, 0x39] -- protocole 1
-pro2 = [esc, 0x3a] -- protocole 2
-pro3 = [esc, 0x3b] -- protocole 3
+-- Protocol sequences
+pro1 = [esc, 0x39] -- protocol 1 (needs one more arguments)
+pro2 = [esc, 0x3a] -- protocol 2 (needs two more arguments)
+pro3 = [esc, 0x3b] -- protocol 3 (needs three more arguments)
 csi  = [esc, 0x5b] -- CSI
 
--- Commandes PRO1
+-- PRO1 commands
 deconnexion = 0x67
 connexion = 0x68
 ret1 = 0x6c
@@ -62,7 +62,7 @@ statusProtocole = 0x76
 enqrom = 0x7b
 reset = 0x7f
 
--- Commandes PRO2
+-- PRO2 commands
 copie = 0x7c
 aiguillageTo = 0x62
 nonDiffusion = 0x64
@@ -77,126 +77,126 @@ repStatusClavier = 0x73
 repStatusFonctionnement = 0x73
 repStatusProtocole = 0x77
 telinfo = [0x31, 0x7d]
-mixte1 = [0x32, 0x7d]
-mixte2 = [0x32, 0x7e]
+mixed1 = [0x32, 0x7d]
+mixed2 = [0x32, 0x7e]
 
--- Commandes PRO3
-aiguillageOff = 0x60
-aiguillageOn = 0x61
-aiguillageFrom = 0x63
+-- PRO3 Commands
+switchOff = 0x60
+switchOn = 0x61
+switchFrom = 0x63
 
 -- Longueurs commandes PRO
-longueurPro1 = 3
-longueurPro2 = 4
-longueurPro3 = 5
+pro1Length = 3
+pro2Length = 4
+pro3Length = 5
 
 -- Autres codes
-copieFrancais = 0x6a
-copieAmericain = 0x6b
+copyFrench = 0x6a
+copyAmerican = 0x6b
 eten = 0x41
 c0 = 0x43
 
--- Codes PRO2+START/STOP
-rouleau = 0x43
+-- PRO2+START/STOP codes
+rollMode = 0x43
 procedure = 0x44
-minuscules = 0x45
+lowercase = 0x45
 
--- Codes PRO2+PROG
+-- PRO2+PROG codes
 b9600 = 0x7f
 b4800 = 0x76
 b1200 = 0x64
 b300 = 0x52
 
--- Codes PRO3+START/STOP
+-- PRO3+START/STOP codes
 -- eten = 0x41
 -- c0 = 0x43
 
--- Codes de reception
-rcptEcran = 0x58
-rcptClavier = 0x59
+-- Reception codes
+rcptScreen = 0x58
+rcptKeyboard = 0x59
 rcptModem = 0x5a
-rcptPrise = 0x5b
-rcptTelephonique = 0x5c
-rcptLogiciel = 0x5d
+rcptPlug = 0x5b
+rcptPhone = 0x5c
+rcptSoftware = 0x5d
 
--- Codes d'emission
-emetEcran = 0x50
-emetClavier = 0x51
-emetModem = 0x52
-emetPrise = 0x53
-emetTelephonique = 0x54
-emetLogiciel = 0x55
+-- Emission codes
+emitScreen = 0x50
+emitKeyboard = 0x51
+emitModem = 0x52
+emitPlug = 0x53
+emitPhone = 0x54
+emitSoftware = 0x55
 
 -- Accents
-accentCedille = [ss2, 0x4b]
-accentGrave = [ss2, 0x41]
-accentAigu = [ss2, 0x42]
+accentCedilla     = [ss2, 0x4b]
+accentGrave       = [ss2, 0x41]
+accentAcute       = [ss2, 0x42]
 accentCirconflexe = [ss2, 0x43]
-accentTrema = [ss2, 0x48]
+accentUmlaut      = [ss2, 0x48]
 
--- Touches de direction
-haut = csi ++ [0x41]
-bas = csi ++ [0x42]
-gauche = csi ++ [0x44]
-droite = csi ++ [0x43]
+-- Direction keys
+keyUp    = csi ++ [0x41]
+keyDown  = csi ++ [0x42]
+keyLeft  = csi ++ [0x44]
+keyRight = csi ++ [0x43]
 
-majHaut = csi ++ [0x4d]
-majBas = csi ++ [0x4c]
-majGauche = csi ++ [0x50]
-majDroite = csi ++ [0x34, 0x68]
+keyShiftUp    = csi ++ [0x4d]
+keyShiftDown  = csi ++ [0x4c]
+keyShiftLeft  = csi ++ [0x50]
+keyShiftRight = csi ++ [0x34, 0x68]
 
-ctrlGauche = 0x7f
+ctrlLeft = 0x7f
 
--- Touche Entree/Retour chariot
-entree      = 0x0d
-majEntree  = csi ++ [0x48]
-ctrlEntree = csi ++ [0x32, 0x4a]
+-- Return key
+keyReturn      = 0x0d
+keyShiftReturn = csi ++ [0x48]
+keyCtrlReturn  = csi ++ [0x32, 0x4a]
 
 -- Touches de fonction
-kEnvoi      = [dc3, 0x41]
-kRetour     = [dc3, 0x42]
-kRepetition = [dc3, 0x43]
-kGuide      = [dc3, 0x44]
-kAnnulation = [dc3, 0x45]
-kSommaire   = [dc3, 0x46]
-kCorrection = [dc3, 0x47]
-kSuite      = [dc3, 0x48]
-kConnexion  = [dc3, 0x49]
+keyFuncSend       = [dc3, 0x41]
+keyFuncReturn     = [dc3, 0x42]
+keyFuncRepeat     = [dc3, 0x43]
+keyFuncGuide      = [dc3, 0x44]
+keyFuncCancel     = [dc3, 0x45]
+keyFuncTOC        = [dc3, 0x46]
+keyFuncCorrection = [dc3, 0x47]
+keyFuncNext       = [dc3, 0x48]
+keyFuncConnection = [dc3, 0x49]
 
--- Types de minitels
-data Capacite = Capacite {
-    id :: Char,
-    nom :: String,
-    retournable :: Bool,
-    clavier :: String,
-    vitesse :: Int,
-    colonnes80 :: Bool,
-    caracteres :: Bool
+-- Minitel ability
+data Ability = Ability {
+    id         :: Char,
+    name       :: String,
+    reversible :: Bool,
+    keyboard   :: String,
+    maxSpeed   :: Int,
+    cols80     :: Bool,
+    charDefine :: Bool
 } deriving (Show)
 
-typeMinitels = [
-    Capacite 'c' "Minitel 1"         False "ABCD"   1200 False False,
-    Capacite 'd' "Minitel 10"        False "Azerty" 1200 False False,
-    Capacite 'e' "Minitel 1 couleur" False "Azerty" 1200 False False,
-    Capacite 'f' "Minitel 10"        True  "Azerty" 1200 False False,
-    Capacite 'g' "Émulateur"         True  "Azerty" 9600 True  True,
-    Capacite 'j' "Imprimante"        False ""       1200 False False,
-    Capacite 'r' "Minitel 1"         True  "Azerty" 1200 False False,
-    Capacite 's' "Minitel 1 couleur" True  "Azerty" 1200 False False,
-    Capacite 't' "Terminatel 252"    False ""       1200 False False,
-    Capacite 'u' "Minitel 1B"        True  "Azerty" 4800 True  False,
-    Capacite 'v' "Minitel 2"         True  "Azerty" 9600 True  True,
-    Capacite 'w' "Minitel 10B"       True  "Azerty" 4800 True  False,
-    Capacite 'y' "Minitel 5"         True  "Azerty" 9600 True  True,
-    Capacite 'z' "Minitel 12"        True  "Azerty" 9600 True  True
+minitelAbilities = [
+    Ability 'c' "Minitel 1"         False "ABCD"   1200 False False,
+    Ability 'd' "Minitel 10"        False "Azerty" 1200 False False,
+    Ability 'e' "Minitel 1 couleur" False "Azerty" 1200 False False,
+    Ability 'f' "Minitel 10"        True  "Azerty" 1200 False False,
+    Ability 'g' "Émulateur"         True  "Azerty" 9600 True  True,
+    Ability 'j' "Imprimante"        False ""       1200 False False,
+    Ability 'r' "Minitel 1"         True  "Azerty" 1200 False False,
+    Ability 's' "Minitel 1 couleur" True  "Azerty" 1200 False False,
+    Ability 't' "Terminatel 252"    False ""       1200 False False,
+    Ability 'u' "Minitel 1B"        True  "Azerty" 4800 True  False,
+    Ability 'v' "Minitel 2"         True  "Azerty" 9600 True  True,
+    Ability 'w' "Minitel 10B"       True  "Azerty" 4800 True  False,
+    Ability 'y' "Minitel 5"         True  "Azerty" 9600 True  True,
+    Ability 'z' "Minitel 12"        True  "Azerty" 9600 True  True
     ]
 
--- Capacites les plus basiques du Minitel
-minitelBasique =
-    Capacite '*' "Minitel inconnu"   False "ABCD"   1200 False False
+-- Base abilities
+baseAbilities =
+    Ability '*' "Minitel inconnu"   False "ABCD"   1200 False False
 
--- Codes d'identification du constructeur
-constructeurs = [
+-- Maker identification codes
+makerCodes = [
     ('A', "Matra"),
     ('B', "RTIC"),
     ('C', "Telic-Alcatel"),
@@ -211,9 +211,9 @@ constructeurs = [
     ('L', "Desmet")
     ]
 
--- Tables de conversion des caracteres speciaux
-versVideotex :: Char -> [Integer]
-versVideotex c 
+-- Special characters conversion tables
+toVideotex :: Char -> [Integer]
+toVideotex c 
     | c == '£'  = [0x19, 0x23]
     | c == '°'  = [0x19, 0x30]
     | c == '±'  = [0x19, 0x31] 
@@ -253,8 +253,8 @@ versVideotex c
     | isAscii c = [(fromIntegral . ord) c]
     | otherwise = []
 
-versAutre :: Char -> [Integer]
-versAutre c
+toTerminal :: Char -> [Integer]
+toTerminal c
     | c == '£'  = [0x0E, 0x23, 0x0F]
     | c == '°'  = [0x0E, 0x5B, 0x0F]
     | c == 'ç'  = [0x0E, 0x5C, 0x0F]

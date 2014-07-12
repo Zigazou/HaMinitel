@@ -1,61 +1,64 @@
 -- Module Minitel
 module Minitel.Minitel where
 
-import Minitel.Generateur
+import Minitel.Generator
 import Minitel.Queue
-import Minitel.Sequence
+import Minitel.MString
+
 import System.Hardware.Serialport
+import qualified Data.ByteString as B
+
 import Control.Concurrent
 import Control.Concurrent.STM.TQueue
 import Control.Concurrent.STM
-import Control.Monad
-import qualified Data.ByteString as B
 
-rcptBoucle :: SerialPort -> Queue -> IO ()
-rcptBoucle s q = forever $ do
+import Control.Monad
+
+recvLoop :: SerialPort -> Queue -> IO ()
+recvLoop s q = forever $ do
     b <- recv s 1
     when (1 <= B.length b) $ (put q . fromIntegral . B.head) b
 
-emetBoucle :: SerialPort -> Queue -> IO ()
-emetBoucle s q = forever $ get q >>= send s . B.singleton . fromIntegral
+sendLoop :: SerialPort -> Queue -> IO ()
+sendLoop s q = forever $ get q >>= send s . B.singleton . fromIntegral
 
 data Minitel = Minitel {
-    serial    :: SerialPort,
-    entree    :: Queue,
-    sortie    :: Queue,
-    recepteur :: ThreadId,
-    emetteur  :: ThreadId
+    serial   :: SerialPort,
+    input    :: Queue,
+    output   :: Queue,
+    receiver :: ThreadId,
+    sender   :: ThreadId
 }
 
-(<<<) :: Minitel -> SeqMinitel -> IO ()
-(<<<) minitel seqEnvoi = do
-    putSeq (sortie minitel) seqEnvoi
+(<<<) :: Minitel -> MString -> IO ()
+(<<<) minitel s = do
+    putM (output minitel) s
 
-valideMinitel :: Minitel -> SeqValide -> IO Bool
-valideMinitel minitel (seqEnvoi, seqReception) = do
-    putSeq (sortie minitel) seqEnvoi
-    reponse <- lireSequence (get $ entree minitel) seqComplete
-    return (reponse == seqReception)
+mConfirmation :: Minitel -> MConfirmation -> IO Bool
+mConfirmation minitel (mSend, mReceive) = do
+    putM (output minitel) mSend
+    answer <- readMString (get $ input minitel) completeReturn
+    return (answer == mReceive)
 
-appelMinitel :: Minitel -> SeqAppel -> IO SeqMinitel
-appelMinitel minitel (seqEnvoi, longueur) = do
-    putSeq (sortie minitel) seqEnvoi
-    return =<< lireFixe (get $ entree minitel) (fromIntegral longueur)
+mCall :: Minitel -> MCall -> IO MString
+mCall minitel (mSend, count) = do
+    putM (output minitel) mSend
+    return =<< readCount (get $ input minitel) (fromIntegral count)
 
-lireFixe :: (Eq a) => IO a -> Int -> IO [a]
-lireFixe getter count = lireSequence getter isComplete
+readCount :: (Eq a) => IO a -> Int -> IO [a]
+readCount getter count = readMString getter isComplete
     where isComplete seq = length seq == count
 
-lireSequence :: (Eq a) => IO a -> ([a] -> Bool) -> IO [a]
-lireSequence getter isComplete = lireSequence' []
-    where lireSequence' seq
-            | isComplete seq = return seq
-            | seq == []      = getter >>= \value -> lireSequence' [value]
-            | otherwise      = do
+readMString :: (Eq a) => IO a -> ([a] -> Bool) -> IO [a]
+readMString getter isComplete = readMString' []
+    where readMString' s
+            | isComplete s = return s
+            | s == []      = getter >>= \value -> readMString' [value]
+            | otherwise    = do
                 result <- waitFor 10000000 getter
                 case result of
-                    Just value -> lireSequence' $ seq ++ [value]
-                    Nothing    -> return seq
+                    Just value -> readMString' $ s ++ [value]
+                    Nothing    -> return s
 
 waitFor :: (Eq a) => Int -> IO a -> IO (Maybe a)
 waitFor delay getter = do
@@ -70,30 +73,32 @@ waitFor delay getter = do
 
     killThread reader
     killThread waiter
+
     return result
 
-minitelConfigurationStandard = SerialPortSettings {
-    commSpeed = CS1200,
+baseSettings = SerialPortSettings {
+    commSpeed   = CS1200,
     bitsPerWord = 7,
-    stopb = One,
-    parity = Even,
+    stopb       = One,
+    parity      = Even,
     flowControl = NoFlowControl,
-    timeout = 1000000
+    timeout     = 1000000
     }
 
 minitel :: String -> SerialPortSettings -> IO Minitel
 minitel "" settings = minitel "/dev/ttyUSB0" settings
 minitel dev settings = do
-    port <- openSerial dev settings
-    emetQueue <- atomically $ newTQueue
-    rcptQueue <- atomically $ newTQueue
-    emet <- forkIO $ emetBoucle port emetQueue
-    rcpt <- forkIO $ rcptBoucle port rcptQueue
+    port       <- openSerial dev settings
+    sendQueue  <- atomically $ newTQueue
+    recvQueue  <- atomically $ newTQueue
+    sendThread <- forkIO $ sendLoop port sendQueue
+    recvThread <- forkIO $ recvLoop port recvQueue
 
     return Minitel {
-        serial = port,
-        entree = rcptQueue,
-        sortie = emetQueue,
-        recepteur = rcpt,
-        emetteur = emet
+        serial    = port,
+        input     = recvQueue,
+        output    = sendQueue,
+        receiver  = recvThread,
+        sender    = sendThread
     }
+
