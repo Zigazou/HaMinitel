@@ -20,50 +20,50 @@ default (Int, Double)
 -- * ASCII-Minitel control codes
 --   Minitel follows the ASCII control codes standard except for some values
 --   (ie.: ASCII em = Minitel SS2)
-nul = 0x00 -- ^ null
-soh = 0x01 -- ^ start of heading
-stx = 0x02 -- ^ start of text
-etx = 0x03 -- ^ end of text
-eot = 0x04 -- ^ end of transmission
-enq = 0x05 -- ^ enquiry
-ack = 0x06 -- ^ acknowledge
-bel = 0x07 -- ^ bell
-bs  = 0x08 -- ^ backspace
-tab = 0x09 -- ^ horizontal tab
-lf  = 0x0a -- ^ line feed, new line
-vt  = 0x0b -- ^ vertical tab
-ff  = 0x0c -- ^ form feed, new page
-cr  = 0x0d -- ^ carriage return
-so  = 0x0e -- ^ shift out
-si  = 0x0f -- ^ shift in
-dle = 0x10 -- ^ data link escape
-dc1 = 0x11 -- ^ device control 1
-con = 0x11 -- ^ Cursor on
-dc2 = 0x12 -- ^ device control 2
-rep = 0x12 -- ^ Rep
-dc3 = 0x13 -- ^ device control 3
-sep = 0x13 -- ^ Sep
-dc4 = 0x14 -- ^ device control 4
-cof = 0x14 -- ^ Cursor off
-nak = 0x15 -- ^ negative acknowledge
-syn = 0x16 -- ^ synchronous idle
-etb = 0x17 -- ^ end of transmission block
-can = 0x18 -- ^ cancel
-em  = 0x19 -- ^ end of medium
-ss2 = 0x19 -- ^ SS2
-sub = 0x1a -- ^ substitute
-esc = 0x1b -- ^ escape
-fs  = 0x1c -- ^ file separator
-gs  = 0x1d -- ^ group separator
-ss3 = 0x1d -- ^ SS3
-rs  = 0x1e -- ^ record separator
-us  = 0x1f -- ^ unit separator
+nul = 0x00 -- null
+soh = 0x01 -- start of heading
+stx = 0x02 -- start of text
+etx = 0x03 -- end of text
+eot = 0x04 -- end of transmission
+enq = 0x05 -- enquiry
+ack = 0x06 -- acknowledge
+bel = 0x07 -- bell
+bs  = 0x08 -- backspace
+tab = 0x09 -- horizontal tab
+lf  = 0x0a -- line feed, new line
+vt  = 0x0b -- vertical tab
+ff  = 0x0c -- form feed, new page
+cr  = 0x0d -- carriage return
+so  = 0x0e -- shift out
+si  = 0x0f -- shift in
+dle = 0x10 -- data link escape
+dc1 = 0x11 -- device control 1
+con = 0x11 -- Cursor on
+dc2 = 0x12 -- device control 2
+rep = 0x12 -- Rep
+dc3 = 0x13 -- device control 3
+sep = 0x13 -- Sep
+dc4 = 0x14 -- device control 4
+cof = 0x14 -- Cursor off
+nak = 0x15 -- negative acknowledge
+syn = 0x16 -- synchronous idle
+etb = 0x17 -- end of transmission block
+can = 0x18 -- cancel
+em  = 0x19 -- end of medium
+ss2 = 0x19 -- SS2
+sub = 0x1a -- substitute
+esc = 0x1b -- escape
+fs  = 0x1c -- file separator
+gs  = 0x1d -- group separator
+ss3 = 0x1d -- SS3
+rs  = 0x1e -- record separator
+us  = 0x1f -- unit separator
 
 -- * Protocol sequences
-pro1 = [esc, 0x39] -- ^ protocol 1 (needs one more arguments)
-pro2 = [esc, 0x3a] -- ^ protocol 2 (needs two more arguments)
-pro3 = [esc, 0x3b] -- ^ protocol 3 (needs three more arguments)
-csi  = [esc, 0x5b] -- ^ CSI
+pro1 = [esc, 0x39] -- protocol 1 (needs one more arguments)
+pro2 = [esc, 0x3a] -- protocol 2 (needs two more arguments)
+pro3 = [esc, 0x3b] -- protocol 3 (needs three more arguments)
+csi  = [esc, 0x5b] -- CSI
 
 -- * PRO1 commands
 disconnection  = 0x67
@@ -103,10 +103,10 @@ procedure      = 0x44
 lowercase      = 0x45
 
 -- * PRO2+PROG codes
-b9600          = 0x7f -- ^ 9600 baud
-b4800          = 0x76 -- ^ 4800 baud
-b1200          = 0x64 -- ^ 1200 baud
-b300           = 0x52 -- ^ 300 baud
+b9600          = 0x7f -- 9600 baud
+b4800          = 0x76 -- 4800 baud
+b1200          = 0x64 -- 1200 baud
+b300           = 0x52 -- 300 baud
 
 -- * PRO3 Commands
 switchOff      = 0x60
@@ -178,15 +178,15 @@ keyFuncConnection = [dc3, 0x49]
 
 -- | Minitel ability describes what the Minitel is able to do, since the
 --   Minitel is a generic name for a complete family of terminals
-data Ability = Ability {
-    id         :: Char,   -- ^ A Minitel is identified by a single letter
-    name       :: String, -- ^ Human french name
-    reversible :: Bool,   -- ^ Some Minitels can be used as a standard modem
-    keyboard   :: String, -- ^ First Minitels were ABCD, then Azerty or none
-    maxSpeed   :: Int,    -- ^ Max supported speed in bauds
-    cols80     :: Bool,   -- ^ Is terminal mode (80 columns) supported ?
-    charDefine :: Bool    -- ^ are characters redefinable ?
-} deriving (Show)
+data Ability = Ability
+    { id         :: Char   -- ^ A Minitel is identified by a single letter
+    , name       :: String -- ^ Human french name
+    , reversible :: Bool   -- ^ Some Minitels can be used as a standard modem
+    , keyboard   :: String -- ^ First Minitels were ABCD, then Azerty or none
+    , maxSpeed   :: Int    -- ^ Max supported speed in bauds
+    , cols80     :: Bool   -- ^ Is terminal mode (80 columns) supported ?
+    , charDefine :: Bool   -- ^ are characters redefinable ?
+    } deriving (Show)
 
 -- | A list of known Minitels and their abilities
 minitelAbilities = [

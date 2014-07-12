@@ -25,13 +25,13 @@ import Control.Concurrent.STM
 import Control.Monad
 
 -- | Structure to hold Minitel components
-data Minitel = Minitel {
-    serial   :: SerialPort, -- ^ Serial port to which the Minitel is connected
-    input    :: Queue,      -- ^ Input queue, what we receive from the Minitel
-    output   :: Queue,      -- ^ Output queue, what we recevie from the Minitel
-    receiver :: ThreadId,   -- ^ Receiver thread, allowing full-duplex
-    sender   :: ThreadId    -- ^ Sender thread, allowing full-duplex
-}
+data Minitel = Minitel
+    { serial   :: SerialPort -- ^ Serial port to which the Minitel is connected
+    , input    :: Queue      -- ^ What we receive from the Minitel
+    , output   :: Queue      -- ^ What we send to the Minitel
+    , receiver :: ThreadId   -- ^ Receiver thread, allowing full-duplex
+    , sender   :: ThreadId   -- ^ Sender thread, allowing full-duplex
+    }
 
 -- | Operator to send an MString to the Minitel
 (<<<) :: Minitel -> MString -> IO ()
@@ -97,13 +97,13 @@ waitFor delay getter = do
 
 -- | Base settings for the serial port on which is connected a Minitel.
 --   Standard configuration is 1200 bps, 7 bits, 1 stop, even parity.
-baseSettings = SerialPortSettings {
-    commSpeed   = CS1200,
-    bitsPerWord = 7,
-    stopb       = One,
-    parity      = Even,
-    flowControl = NoFlowControl,
-    timeout     = 1000000
+baseSettings = SerialPortSettings
+    { commSpeed   = CS1200
+    , bitsPerWord = 7
+    , stopb       = One
+    , parity      = Even
+    , flowControl = NoFlowControl
+    , timeout     = 1000000
     }
 
 -- | Opens a full-duplex connection to a Minitel. The default serial is set
@@ -117,15 +117,16 @@ minitel dev settings = do
     sendThread <- forkIO $ sendLoop port sendQueue
     recvThread <- forkIO $ recvLoop port recvQueue
 
-    return Minitel {
-        serial    = port,
-        input     = recvQueue,
-        output    = sendQueue,
-        receiver  = recvThread,
-        sender    = sendThread
-    }
-  where recvLoop s q = forever $ do
+    return Minitel
+        { serial    = port
+        , input     = recvQueue
+        , output    = sendQueue
+        , receiver  = recvThread
+        , sender    = sendThread
+        }
+  where sendLoop s q = forever $ get q >>= send s . B.singleton . fromIntegral
+        recvLoop s q = forever $ do
             b <- recv s 1
             when (1 <= B.length b) $ (put q . fromIntegral . B.head) b
-        sendLoop s q = forever $ get q >>= send s . B.singleton . fromIntegral
+        
 

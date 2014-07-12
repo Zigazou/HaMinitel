@@ -15,16 +15,16 @@ haskellMinitel m = forM_ [1 .. 20] $ \ x -> do
 main = do
     m <- minitel "/dev/ttyUSB0" baseSettings
 
-    mapM_ (mCall m) [
-        mExtendedKeyboard  True,
-        mCursorKeys        True,
-        mLowercaseKeyboard True
+    mapM_ (mCall m)
+        [ mExtendedKeyboard  True
+        , mCursorKeys        True
+        , mLowercaseKeyboard True
         ]
 
-    mapM_ (m <<<) [
-        mClear ReallyEverything,
-        mLocate 1 0,
-        mString VideoTex "Démonstration de HaMinitel"
+    mapM_ (m <<<)
+        [ mClear ReallyEverything
+        , mLocate 1 0
+        , mString VideoTex "Démonstration de HaMinitel"
         ]
 
     haskellMinitel m

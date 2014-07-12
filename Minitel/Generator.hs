@@ -120,16 +120,14 @@ mLocate x y = [us, 0x40 + y, 0x40 + x]
 --   the length of the generated MString
 mMove :: Int -> Int -> MString
 mMove 0 0 = []
-mMove 0 y
-    | y >= -4 && y <= -1 = replicate (abs y) vt
-    | y >= 1  && y <=  4 = replicate y lf
-    | y <  0             = csi ++ showInt y ++ [0x42]
-    | y >  0             = csi ++ showInt y ++ [0x41]
-mMove x 0
-    | x >= -4 && x <= -1 = replicate (abs x) bs
-    | x >= 1  && x <=  4 = replicate x tab
-    | x <  0             = csi ++ showInt x ++ [0x43]
-    | x >  0             = csi ++ showInt x ++ [0x44]
+mMove 0 y | y >= -4 && y <= -1 = replicate (abs y) vt
+          | y >= 1  && y <=  4 = replicate y lf
+          | y <  0             = csi ++ showInt y ++ [0x42]
+          | y >  0             = csi ++ showInt y ++ [0x41]
+mMove x 0 | x >= -4 && x <= -1 = replicate (abs x) bs
+          | x >= 1  && x <=  4 = replicate x tab
+          | x <  0             = csi ++ showInt x ++ [0x43]
+          | x >  0             = csi ++ showInt x ++ [0x44]
 mMove x y = mMove x 0 ++ mMove 0 y
 
 -- | Move cursor to the start of the current line.
