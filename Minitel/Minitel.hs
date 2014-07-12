@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleInstances #-}
 {-|
 Module      : Minitel
 Description : Interface to the Minitel
@@ -24,6 +25,11 @@ import Control.Concurrent.STM
 
 import Control.Monad
 
+import Data.Char
+
+class Sendable a where
+    (<<<) :: Minitel -> a -> IO ()
+
 -- | Structure to hold Minitel components
 data Minitel = Minitel
     { serial   :: SerialPort -- ^ Serial port to which the Minitel is connected
@@ -31,12 +37,25 @@ data Minitel = Minitel
     , output   :: Queue      -- ^ What we send to the Minitel
     , receiver :: ThreadId   -- ^ Receiver thread, allowing full-duplex
     , sender   :: ThreadId   -- ^ Sender thread, allowing full-duplex
+    , mode     :: MMode      -- ^ Current mode
     }
 
 -- | Operator to send an MString to the Minitel
-(<<<) :: Minitel -> MString -> IO ()
-(<<<) minitel s = do
-    putM (output minitel) s
+instance Sendable MString where
+    (<<<) minitel s = do
+        putM (output minitel) s
+
+instance Sendable [MString] where
+    (<<<) minitel s = do
+        mapM_ (minitel <<<) s
+
+instance Sendable Char where
+    (<<<) minitel c = do
+        putM (output minitel) [ord c]
+
+instance Sendable String where
+    (<<<) minitel s = do
+        mapM_ (minitel <<<) s
 
 -- | Sends an MString to the Minitel and waits for its answer. The answer
 --   should be the awaited one specified in the MConfirmation. If there is
@@ -106,8 +125,26 @@ baseSettings = SerialPortSettings
     , timeout     = 1000000
     }
 
+-- | Change Minitel mode
+setMode :: Minitel -> MMode -> IO Minitel
+setMode minitel newMode = do
+    mConfirmation minitel $ mMode (mode minitel) newMode
+    return minitel { mode = newMode }
+
+-- | Change Minitel speed
+{-
+setSpeed :: Minitel -> Int -> IO Minitel
+setSpeed minitel speed = do
+    mConfirmation minitel $ mMode (mode minitel) newMode
+    return minitel { mode = newMode }
+-}
+
+-- | waitForMinitel
+waitForMinitel :: Minitel -> IO MString
+waitForMinitel minitel = mCall minitel mIdentification
+
 -- | Opens a full-duplex connection to a Minitel. The default serial is set
---   to /dev/ttyUSB0.
+--   to \/dev\/ttyUSB0.
 minitel :: String -> SerialPortSettings -> IO Minitel
 minitel "" settings = minitel "/dev/ttyUSB0" settings
 minitel dev settings = do
@@ -123,6 +160,7 @@ minitel dev settings = do
         , output    = sendQueue
         , receiver  = recvThread
         , sender    = sendThread
+        , mode      = VideoTex
         }
   where sendLoop s q = forever $ get q >>= send s . B.singleton . fromIntegral
         recvLoop s q = forever $ do

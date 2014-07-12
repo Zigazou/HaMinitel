@@ -281,3 +281,11 @@ mRedesign fromChar designs charset =
     ++ [us, 0x41, 0x41]
     ++ mUseSet charset
 
+-- | Draw a rectangle on the Minitel Screen
+mRectangle :: Int -> Int -> Int -> Int -> Color -> MString
+mRectangle x y w h color = concat . concat $ map mLine [y .. (y + h - 1)]
+    where mLine y = [ mLocate x y
+                    , mBackground color
+                    , mRepeat w 0x20
+                    ]
+
