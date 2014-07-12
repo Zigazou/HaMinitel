@@ -8,7 +8,7 @@ import Data.Char
 data MMode = VideoTex | Mixed | Terminal
     deriving (Ord, Eq, Show)
 
-type MColor = Integer
+type MColor = Int
 
 class ToMColor a where
     toMColor :: a -> MColor
@@ -86,25 +86,25 @@ mForeground color = [esc, 0x40 + toMColor color]
 mBackground :: (ToMColor a) => a -> MString
 mBackground color = [esc, 0x50 + toMColor color]
 
-mLocate :: Integer -> Integer -> MString
+mLocate :: Int -> Int -> MString
 mLocate 1 1 = [rs]
 mLocate x y = [us, 0x40 + y, 0x40 + x]
 
-mLocateR :: Integer -> Integer -> MString
+mLocateR :: Int -> Int -> MString
 mLocateR 0 0 = []
 mLocateR 0 y
     | y >= -4 && y <= -1 = replicate (fromIntegral . abs $ y) vt
     | y >= 1  && y <=  4 = replicate (fromIntegral y) lf
-    | y <  0             = csi ++ showInteger y ++ [0x42]
-    | y >  0             = csi ++ showInteger y ++ [0x41]
+    | y <  0             = csi ++ showInt y ++ [0x42]
+    | y >  0             = csi ++ showInt y ++ [0x41]
 mLocateR x 0
     | x >= -4 && x <= -1 = replicate (fromIntegral . abs $ x) bs
     | x >= 1  && x <=  4 = replicate (fromIntegral x) tab
-    | x <  0             = csi ++ showInteger x ++ [0x43]
-    | x >  0             = csi ++ showInteger x ++ [0x44]
+    | x <  0             = csi ++ showInt x ++ [0x43]
+    | x >  0             = csi ++ showInt x ++ [0x44]
 mLocateR x y = mLocateR x 0 ++ mLocateR 0 y
 
-mSize :: Integer -> Integer -> MString
+mSize :: Int -> Int -> MString
 mSize width height = [esc, 0x4c + (height - 1) + (width - 1) * 2]
 
 mUnderscore :: Bool -> MString
@@ -146,7 +146,7 @@ mClear Line             = csi ++ [0x32, 0x4b]
 mClear StatusLine       = [us, 0x40, 0x41, can, lf]
 mClear ReallyEverything = mClear Everything ++ mClear StatusLine
 
-mRepeat :: Integer -> Integer -> MString
+mRepeat :: Int -> Int -> MString
 mRepeat count c = [c, rep, 0x40 + count - 1]
 
 mBeep :: MString
@@ -158,15 +158,15 @@ mGotoStartOfLine = [cr]
 data WhatToRemove = Column | Row
 type WhatToInsert = WhatToRemove
 
-mRemove :: WhatToRemove -> Integer -> MString
-mRemove Column count = csi ++ showInteger count ++ [0x50]
-mRemove Row    count = csi ++ showInteger count ++ [0x4d]
+mRemove :: WhatToRemove -> Int -> MString
+mRemove Column count = csi ++ showInt count ++ [0x50]
+mRemove Row    count = csi ++ showInt count ++ [0x4d]
 
-mInsert :: WhatToInsert -> Integer -> MString
+mInsert :: WhatToInsert -> Int -> MString
 mInsert Column count = csi ++ [0x34, 0x68]
                     ++ replicate (fromIntegral count) 0x20
                     ++ csi ++ [0x34, 0x6c]
-mInsert Row    count = csi ++ showInteger count ++ [0x4c]
+mInsert Row    count = csi ++ showInt count ++ [0x4c]
 
 mSemigraphic :: Bool -> MString
 mSemigraphic True  = [so]
@@ -195,7 +195,7 @@ mDesign design = map bits' ((multiSplit 6 . concat) design) ++ [0x30]
 mDesigns :: [CharDesign] -> [MString]
 mDesigns = map mDesign
 
-mRedesign :: Integer -> [CharDesign] -> CharSet -> MString
+mRedesign :: Int -> [CharDesign] -> CharSet -> MString
 mRedesign fromChar designs charset =
     mDefineSet charset
     ++ (concat . mDesigns) designs

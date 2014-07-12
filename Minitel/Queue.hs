@@ -2,19 +2,20 @@
 module Minitel.Queue where
 
 import Minitel.MString
-import qualified Data.ByteString as B
-import Control.Concurrent.STM.TQueue
-import Control.Concurrent.STM
-import Control.Monad
 
-type Queue = TQueue Integer
+import qualified Data.ByteString as B
+import Control.Concurrent.STM.TQueue (TQueue, writeTQueue, readTQueue)
+import Control.Concurrent.STM (atomically)
+import Control.Monad (forM_)
+
+type Queue = TQueue Int
 
 putM :: Queue -> MString -> IO ()
 putM q s = forM_ s $ \ x -> do put q x
 
-put :: Queue -> Integer -> IO ()
-put q v = (atomically . writeTQueue q) v
+put :: Queue -> Int -> IO ()
+put q = (atomically . writeTQueue q)
 
-get :: Queue -> IO Integer
-get q = (atomically . readTQueue) q
+get :: Queue -> IO Int
+get = atomically . readTQueue
 
