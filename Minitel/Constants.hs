@@ -95,7 +95,7 @@ pro3Length = 5
 -- Autres codes
 copyFrench = 0x6a
 copyAmerican = 0x6b
-eten = 0x41
+extd = 0x41
 c0 = 0x43
 
 -- PRO2+START/STOP codes
@@ -110,24 +110,24 @@ b1200 = 0x64
 b300 = 0x52
 
 -- PRO3+START/STOP codes
--- eten = 0x41
+-- extd = 0x41
 -- c0 = 0x43
 
 -- Reception codes
-rcptScreen = 0x58
-rcptKeyboard = 0x59
-rcptModem = 0x5a
-rcptPlug = 0x5b
-rcptPhone = 0x5c
-rcptSoftware = 0x5d
+recvScreen = 0x58
+recvKeyboard = 0x59
+recvModem = 0x5a
+recvPlug = 0x5b
+recvPhone = 0x5c
+recvSoftware = 0x5d
 
 -- Emission codes
-emitScreen = 0x50
-emitKeyboard = 0x51
-emitModem = 0x52
-emitPlug = 0x53
-emitPhone = 0x54
-emitSoftware = 0x55
+sendScreen = 0x50
+sendKeyboard = 0x51
+sendModem = 0x52
+sendPlug = 0x53
+sendPhone = 0x54
+sendSoftware = 0x55
 
 -- Accents
 accentCedilla     = [ss2, 0x4b]

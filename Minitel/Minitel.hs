@@ -14,14 +14,6 @@ import Control.Concurrent.STM
 
 import Control.Monad
 
-recvLoop :: SerialPort -> Queue -> IO ()
-recvLoop s q = forever $ do
-    b <- recv s 1
-    when (1 <= B.length b) $ (put q . fromIntegral . B.head) b
-
-sendLoop :: SerialPort -> Queue -> IO ()
-sendLoop s q = forever $ get q >>= send s . B.singleton . fromIntegral
-
 data Minitel = Minitel {
     serial   :: SerialPort,
     input    :: Queue,
@@ -43,7 +35,7 @@ mConfirmation minitel (mSend, mReceive) = do
 mCall :: Minitel -> MCall -> IO MString
 mCall minitel (mSend, count) = do
     putM (output minitel) mSend
-    return =<< readCount (get $ input minitel) (fromIntegral count)
+    return =<< readCount (get $ input minitel) count
 
 readCount :: (Eq a) => IO a -> Int -> IO [a]
 readCount getter count = readMString getter isComplete
@@ -101,4 +93,8 @@ minitel dev settings = do
         receiver  = recvThread,
         sender    = sendThread
     }
+  where recvLoop s q = forever $ do
+            b <- recv s 1
+            when (1 <= B.length b) $ (put q . fromIntegral . B.head) b
+        sendLoop s q = forever $ get q >>= send s . B.singleton . fromIntegral
 

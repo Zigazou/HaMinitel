@@ -41,23 +41,11 @@ instance ToMColor Grey where
         Grey6 -> 3
         Grey7 -> 7
 
-instance Read Color where
-    readsPrec _ s
-        | s == "black"   = [(Black, "black")]
-        | s == "red"     = [(Red, "red")]
-        | s == "green"   = [(Green, "green")]
-        | s == "yellow"  = [(Yellow, "yellow")]
-        | s == "blue"    = [(Blue, "blue")]
-        | s == "magenta" = [(Magenta, "magenta")]
-        | s == "cyan"    = [(Cyan, "cyan")]
-        | s == "white"   = [(White, "white")]
-        | otherwise = []
-
 mMode :: MMode -> MMode -> MConfirmation
 mMode Terminal VideoTex = (csi ++ [0x3f, 0x7b], [sep, 0x5e])
-mMode VideoTex Mixed    = (pro2 ++ mixed1, [sep, 0x70])
-mMode VideoTex Terminal = (pro2 ++ telinfo, csi ++ [0x3f, 0x7a])
-mMode Mixed    VideoTex = (pro2 ++ mixed2, [sep, 0x71])
+mMode VideoTex Mixed    = (pro2 ++ mixed1     , [sep, 0x70])
+mMode VideoTex Terminal = (pro2 ++ telinfo    , csi ++ [0x3f, 0x7a])
+mMode Mixed    VideoTex = (pro2 ++ mixed2     , [sep, 0x71])
 mMode Mixed    Terminal = mMode VideoTex Terminal
 mMode _        _        = error "Unsupported mode switch"
 
@@ -69,12 +57,12 @@ mIdentification :: MCall
 mIdentification = (pro1 ++ [enqrom], 5)
 
 mExtendedKeyboard :: Bool -> MCall
-mExtendedKeyboard True  = (pro3 ++ [start, rcptKeyboard, eten], pro3Length)
-mExtendedKeyboard False = (pro3 ++ [stop , rcptKeyboard, eten], pro3Length)
+mExtendedKeyboard True  = (pro3 ++ [start, recvKeyboard, extd], pro3Length)
+mExtendedKeyboard False = (pro3 ++ [stop , recvKeyboard, extd], pro3Length)
 
 mCursorKeys :: Bool -> MCall
-mCursorKeys True  = (pro3 ++ [start, rcptKeyboard, c0], pro3Length)
-mCursorKeys False = (pro3 ++ [stop , rcptKeyboard, c0], pro3Length)
+mCursorKeys True  = (pro3 ++ [start, recvKeyboard, c0], pro3Length)
+mCursorKeys False = (pro3 ++ [stop , recvKeyboard, c0], pro3Length)
 
 mLowercaseKeyboard :: Bool -> MCall
 mLowercaseKeyboard True  = (pro2 ++ [start, lowercase], pro2Length)
@@ -93,13 +81,13 @@ mLocate x y = [us, 0x40 + y, 0x40 + x]
 mLocateR :: Int -> Int -> MString
 mLocateR 0 0 = []
 mLocateR 0 y
-    | y >= -4 && y <= -1 = replicate (fromIntegral . abs $ y) vt
-    | y >= 1  && y <=  4 = replicate (fromIntegral y) lf
+    | y >= -4 && y <= -1 = replicate (abs y) vt
+    | y >= 1  && y <=  4 = replicate y lf
     | y <  0             = csi ++ showInt y ++ [0x42]
     | y >  0             = csi ++ showInt y ++ [0x41]
 mLocateR x 0
-    | x >= -4 && x <= -1 = replicate (fromIntegral . abs $ x) bs
-    | x >= 1  && x <=  4 = replicate (fromIntegral x) tab
+    | x >= -4 && x <= -1 = replicate (abs x) bs
+    | x >= 1  && x <=  4 = replicate x tab
     | x <  0             = csi ++ showInt x ++ [0x43]
     | x >  0             = csi ++ showInt x ++ [0x44]
 mLocateR x y = mLocateR x 0 ++ mLocateR 0 y
@@ -124,8 +112,8 @@ mVisibleCursor True  = [con]
 mVisibleCursor False = [cof]
 
 mEchoing :: Bool -> MCall
-mEchoing True  = (pro3 ++ [switchOn , rcptScreen, emitModem], pro3Length)
-mEchoing False = (pro3 ++ [switchOff, rcptScreen, emitModem], pro3Length)
+mEchoing True  = (pro3 ++ [switchOn , recvScreen, sendModem], pro3Length)
+mEchoing False = (pro3 ++ [switchOff, recvScreen, sendModem], pro3Length)
 
 data WhatToClear = Everything
                  | EndOfLine
@@ -163,8 +151,7 @@ mRemove Column count = csi ++ showInt count ++ [0x50]
 mRemove Row    count = csi ++ showInt count ++ [0x4d]
 
 mInsert :: WhatToInsert -> Int -> MString
-mInsert Column count = csi ++ [0x34, 0x68]
-                    ++ replicate (fromIntegral count) 0x20
+mInsert Column count = csi ++ [0x34, 0x68] ++ replicate count 0x20
                     ++ csi ++ [0x34, 0x6c]
 mInsert Row    count = csi ++ showInt count ++ [0x4c]
 
