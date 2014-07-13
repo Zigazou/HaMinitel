@@ -15,6 +15,7 @@ module Minitel.Minitel where
 import Minitel.Generator
 import Minitel.Queue
 import Minitel.MString
+import Minitel.Constants
 
 import System.Hardware.Serialport
 import qualified Data.ByteString as B
@@ -57,6 +58,10 @@ instance Sendable String where
     (<<<) minitel s = do
         mapM_ (minitel <<<) s
 
+instance Sendable MCall where
+    (<<<) minitel (mSend, _) = do
+        minitel <<< mSend
+
 -- | Sends an MString to the Minitel and waits for its answer. The answer
 --   should be the awaited one specified in the MConfirmation. If there is
 --   no answer from the Minitel or the answer is not the right one, returns
@@ -64,7 +69,7 @@ instance Sendable String where
 mConfirmation :: Minitel -> MConfirmation -> IO Bool
 mConfirmation minitel (mSend, mReceive) = do
     putM (output minitel) mSend
-    answer <- readMString (get $ input minitel) completeReturn
+    answer <- readNMString (get $ input minitel) completeReturn
     return (answer == mReceive)
 
 -- | Sends an MString to the Minitel and waits for its answer. It returns
@@ -72,27 +77,51 @@ mConfirmation minitel (mSend, mReceive) = do
 mCall :: Minitel -> MCall -> IO MString
 mCall minitel (mSend, count) = do
     putM (output minitel) mSend
-    return =<< readCount (get $ input minitel) count
+    return =<< readNCount (get $ input minitel) count
 
 -- | Waits for an MString of @count@ elements coming from the Minitel. If it
 --   takes too long, returns what has already been collected.
-readCount :: (Eq a) => IO a -> Int -> IO [a]
-readCount getter count = readMString getter isComplete
+--   This is the blocking version.
+readBCount :: (Eq a) => IO a -> Int -> IO [a]
+readBCount getter count = readBMString getter isComplete
+    where isComplete seq = length seq == count
+
+-- | Waits for an MString of @count@ elements coming from the Minitel. If it
+--   takes too long, returns what has already been collected.
+--   This is the non-blocking version
+readNCount :: (Eq a) => IO a -> Int -> IO [a]
+readNCount getter count = readNMString getter isComplete
     where isComplete seq = length seq == count
 
 -- | Waits for a complete MString coming from the Minitel. If it takes too
 --   long, returns what has already been collected. To determine if the MString
 --   is complete, it needs an @isComplete@ function which tells if an MString
 --   is complete (True) or not (False).
-readMString :: (Eq a) => IO a -> ([a] -> Bool) -> IO [a]
-readMString getter isComplete = readMString' []
-    where readMString' s
+--   This is the blocking version.
+readBMString :: (Eq a) => IO a -> ([a] -> Bool) -> IO [a]
+readBMString getter isComplete = readBMString' []
+    where readBMString' s
             | isComplete s = return s
-            | s == []      = getter >>= \value -> readMString' [value]
+            | s == []      = getter >>= \value -> readBMString' [value]
             | otherwise    = do
-                result <- waitFor 10000000 getter
+                result <- waitFor 1000000 getter
                 case result of
-                    Just value -> readMString' $ s ++ [value]
+                    Just value -> readBMString' $ s ++ [value]
+                    Nothing    -> return s
+
+-- | Waits for a complete MString coming from the Minitel. If it takes too
+--   long, returns what has already been collected. To determine if the MString
+--   is complete, it needs an @isComplete@ function which tells if an MString
+--   is complete (True) or not (False).
+--   This is the non-blocking version
+readNMString :: (Eq a) => IO a -> ([a] -> Bool) -> IO [a]
+readNMString getter isComplete = readNMString' []
+    where readNMString' s
+            | isComplete s = return s
+            | otherwise    = do
+                result <- waitFor 200000 getter
+                case result of
+                    Just value -> readNMString' $ s ++ [value]
                     Nothing    -> return s
 
 -- | Waits for either a read to succeed or a delay to end. It does this by
@@ -122,7 +151,7 @@ baseSettings = SerialPortSettings
     , stopb       = One
     , parity      = Even
     , flowControl = NoFlowControl
-    , timeout     = 1000000
+    , timeout     = 10
     }
 
 -- | Change Minitel mode
@@ -131,17 +160,42 @@ setMode minitel newMode = do
     mConfirmation minitel $ mMode (mode minitel) newMode
     return minitel { mode = newMode }
 
+-- | Translates bit rate to SerialPort types
+spBitRate :: Int -> CommSpeed
+spBitRate 300  = CS300
+spBitRate 1200 = CS1200
+spBitRate 4800 = CS4800
+spBitRate 9600 = CS9600
+spBitRate _    = error "Unsupported bit rate"
+
 -- | Change Minitel speed
-{-
 setSpeed :: Minitel -> Int -> IO Minitel
-setSpeed minitel speed = do
-    mConfirmation minitel $ mMode (mode minitel) newMode
-    return minitel { mode = newMode }
--}
+setSpeed m rate = do
+    waitForMinitel m
+    m <<< mSpeed rate
+    threadDelay 500000
+    killMinitel m
+    let settings = baseSettings { commSpeed = spBitRate rate }
+    m <- minitel "" settings
+    return m
+    
+    --answer <- mCall m $ mSpeed rate
+    {-
+    if length answer == pro2Length
+        then return m
+        else do
+            killMinitel m
+            let settings = baseSettings { commSpeed = spBitRate rate }
+            m <- minitel "" settings
+            return m
+    -}
 
 -- | waitForMinitel
 waitForMinitel :: Minitel -> IO MString
-waitForMinitel minitel = mCall minitel mIdentification
+waitForMinitel minitel = blockOn mIdentification
+    where blockOn (mSend, count) = do
+            putM (output minitel) mSend
+            return =<< readBCount (get $ input minitel) count
 
 -- | Opens a full-duplex connection to a Minitel. The default serial is set
 --   to \/dev\/ttyUSB0.
@@ -167,4 +221,10 @@ minitel dev settings = do
             b <- recv s 1
             when (1 <= B.length b) $ (put q . fromIntegral . B.head) b
         
-
+-- | Kills a minitel, stopping its threads
+killMinitel :: Minitel -> IO ()
+killMinitel minitel = do
+    killThread (sender minitel)
+    putStrLn "sender killed"
+    killThread (receiver minitel)
+    putStrLn "receiver killed"

@@ -288,4 +288,10 @@ mRectangle x y w h color = concat . concat $ map mLine [y .. (y + h - 1)]
                     , mBackground color
                     , mRepeat w 0x20
                     ]
-
+-- | Change Minitel speed
+mSpeed :: Int -> MCall
+mSpeed 300  = (pro2 ++ [prog, b300 ], pro2Length)
+mSpeed 1200 = (pro2 ++ [prog, b1200], pro2Length)
+mSpeed 4800 = (pro2 ++ [prog, b4800], pro2Length)
+mSpeed 9600 = (pro2 ++ [prog, b9600], pro2Length)
+mSpeed _    = error "Unsupported speed"
