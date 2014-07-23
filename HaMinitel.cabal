@@ -26,6 +26,12 @@ library
                      Minitel.Generator
                      Minitel.Queue
                      Minitel.Minitel
+                     Minitel.Key
+                     Minitel.UI.Widget
+                     Minitel.UI.Label
+                     Minitel.UI.TextField
+                     Minitel.UI.Dispatcher
+                     Minitel.UI.Interface
     build-depends:   base ==4.5.*, bytestring ==0.9.*, serialport ==0.4.*,
-                     stm ==2.4.*
+                     stm ==2.4.*, mtl ==2.2.*
 

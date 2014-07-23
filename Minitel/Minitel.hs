@@ -38,29 +38,27 @@ data Minitel = Minitel
     , output   :: Queue      -- ^ What we send to the Minitel
     , receiver :: ThreadId   -- ^ Receiver thread, allowing full-duplex
     , sender   :: ThreadId   -- ^ Sender thread, allowing full-duplex
-    , mode     :: MMode      -- ^ Current mode
     }
 
 -- | Operator to send an MString to the Minitel
 instance Sendable MString where
-    (<<<) minitel s = do
-        putM (output minitel) s
+    (<<<) minitel = putM (output minitel)
 
 instance Sendable [MString] where
-    (<<<) minitel s = do
-        mapM_ (minitel <<<) s
+    (<<<) minitel = mapM_ (minitel <<<)
+
+instance Sendable (Maybe [MString]) where
+    (<<<) minitel (Just ms) = mapM_ (minitel <<<) ms
+    (<<<) minitel Nothing   = return ()
 
 instance Sendable Char where
-    (<<<) minitel c = do
-        putM (output minitel) [ord c]
-
-instance Sendable String where
-    (<<<) minitel s = do
-        mapM_ (minitel <<<) s
+    (<<<) minitel c = putM (output minitel) [ord c]
 
 instance Sendable MCall where
-    (<<<) minitel (mSend, _) = do
-        minitel <<< mSend
+    (<<<) minitel (mSend, _) = minitel <<< mSend
+
+instance Sendable [MCall] where
+    (<<<) minitel = mapM_ (mCall minitel)
 
 -- | Sends an MString to the Minitel and waits for its answer. The answer
 --   should be the awaited one specified in the MConfirmation. If there is
@@ -69,7 +67,7 @@ instance Sendable MCall where
 mConfirmation :: Minitel -> MConfirmation -> IO Bool
 mConfirmation minitel (mSend, mReceive) = do
     putM (output minitel) mSend
-    answer <- readNMString (get $ input minitel) completeReturn
+    answer <- readNMString (getter minitel) completeReturn
     return (answer == mReceive)
 
 -- | Sends an MString to the Minitel and waits for its answer. It returns
@@ -77,7 +75,7 @@ mConfirmation minitel (mSend, mReceive) = do
 mCall :: Minitel -> MCall -> IO MString
 mCall minitel (mSend, count) = do
     putM (output minitel) mSend
-    return =<< readNCount (get $ input minitel) count
+    return =<< readNCount (getter minitel) count
 
 -- | Waits for an MString of @count@ elements coming from the Minitel. If it
 --   takes too long, returns what has already been collected.
@@ -92,6 +90,10 @@ readBCount getter count = readBMString getter isComplete
 readNCount :: (Eq a) => IO a -> Int -> IO [a]
 readNCount getter count = readNMString getter isComplete
     where isComplete seq = length seq == count
+
+-- | Returns the getter for a Minitel
+getter :: Minitel -> IO Int
+getter minitel = get $ input minitel
 
 -- | Waits for a complete MString coming from the Minitel. If it takes too
 --   long, returns what has already been collected. To determine if the MString
@@ -154,12 +156,6 @@ baseSettings = SerialPortSettings
     , timeout     = 10
     }
 
--- | Change Minitel mode
-setMode :: Minitel -> MMode -> IO Minitel
-setMode minitel newMode = do
-    mConfirmation minitel $ mMode (mode minitel) newMode
-    return minitel { mode = newMode }
-
 -- | Translates bit rate to SerialPort types
 spBitRate :: Int -> CommSpeed
 spBitRate 300  = CS300
@@ -190,12 +186,12 @@ setSpeed m rate = do
             return m
     -}
 
--- | waitForMinitel
+-- | waitForMinitel waits till the Minitel has displayed everything
 waitForMinitel :: Minitel -> IO MString
 waitForMinitel minitel = blockOn mIdentification
     where blockOn (mSend, count) = do
             putM (output minitel) mSend
-            return =<< readBCount (get $ input minitel) count
+            return =<< readBCount (getter minitel) count
 
 -- | Opens a full-duplex connection to a Minitel. The default serial is set
 --   to \/dev\/ttyUSB0.
@@ -214,7 +210,6 @@ minitel dev settings = do
         , output    = sendQueue
         , receiver  = recvThread
         , sender    = sendThread
-        , mode      = VideoTex
         }
   where sendLoop s q = forever $ get q >>= send s . B.singleton . fromIntegral
         recvLoop s q = forever $ do
@@ -224,7 +219,6 @@ minitel dev settings = do
 -- | Kills a minitel, stopping its threads
 killMinitel :: Minitel -> IO ()
 killMinitel minitel = do
-    killThread (sender minitel)
-    putStrLn "sender killed"
-    killThread (receiver minitel)
-    putStrLn "receiver killed"
+    killThread $ sender minitel
+    killThread $ receiver minitel
+

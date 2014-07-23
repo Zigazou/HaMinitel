@@ -158,16 +158,16 @@ keyShiftDown  = csi ++ [0x4c]
 keyShiftLeft  = csi ++ [0x50]
 keyShiftRight = csi ++ [0x34, 0x68]
 
-ctrlLeft = 0x7f
+ctrlLeft = [0x7f]
 
 -- * Return key
-keyReturn      = 0x0d
+keyReturn      = [0x0d]
 keyShiftReturn = csi ++ [0x48]
 keyCtrlReturn  = csi ++ [0x32, 0x4a]
 
 -- * Function keys
 keyFuncSend       = [dc3, 0x41]
-keyFuncReturn     = [dc3, 0x42]
+keyFuncPrev       = [dc3, 0x42]
 keyFuncRepeat     = [dc3, 0x43]
 keyFuncGuide      = [dc3, 0x44]
 keyFuncCancel     = [dc3, 0x45]
