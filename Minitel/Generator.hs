@@ -135,15 +135,17 @@ mGotoStartOfLine :: MString
 mGotoStartOfLine = [cr]
 
 -- | The Minitel is able to double width or height of characters
-data CharSize = SimpleSize | DoubleSize
+data CharSize = SimpleWidth  | DoubleWidth
+              | SimpleHeight | DoubleHeight
 
 -- | Change character size. The first argument is the width, the second the
 --   height
 mSize :: CharSize -> CharSize -> MString
-mSize SimpleSize SimpleSize = [esc, 0x4c + 0]
-mSize SimpleSize DoubleSize = [esc, 0x4c + 1]
-mSize DoubleSize SimpleSize = [esc, 0x4c + 2]
-mSize DoubleSize DoubleSize = [esc, 0x4c + 3]
+mSize SimpleWidth SimpleHeight = [esc, 0x4c + 0]
+mSize SimpleWidth DoubleHeight = [esc, 0x4c + 1]
+mSize DoubleWidth SimpleHeight = [esc, 0x4c + 2]
+mSize DoubleWidth DoubleHeight = [esc, 0x4c + 3]
+mSize h           w            = mSize w h
 
 -- | Enable or disable characters underscoring. No underscoring by default.
 mUnderscore :: Bool -> MString
