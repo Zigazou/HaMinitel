@@ -17,7 +17,8 @@ import Data.Char
 
 -- | Every possible character of the Minitel
 minitelChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ\
-               \äëïöüâêîôûàèùéçœŒ{}*$!:;,?./\\&(-_)=+'@0123456789 "
+               \äëïöüâêîôûàèùéçœŒ{}*$!:;,?./\\&(-_)=+'@0123456789 \
+               \↑←→↓°÷±§"
 
 isMinitelChar :: Char -> Bool
 isMinitelChar c = elem c minitelChars
@@ -68,6 +69,6 @@ toKey s
     | s == keyFuncCorrection = KeyCorrection Plain
     | s == keyFuncNext       = KeyNext Plain
     | s == keyFuncConnection = KeyConnection Plain
-    | otherwise              = error "Unsupported key"
+    | otherwise              = error $ "Unsupported key: " ++ show s
     where c = chr $ head s
 

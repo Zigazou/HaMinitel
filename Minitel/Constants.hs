@@ -148,10 +148,10 @@ accCirconflexe = [ss2, 0x43]
 accUmlaut      = [ss2, 0x48]
 
 -- * Direction keys
-keyUp          = csi ++ [0x41]
-keyDown        = csi ++ [0x42]
-keyLeft        = csi ++ [0x44]
-keyRight       = csi ++ [0x43]
+keyUp          = [0x0b]
+keyDown        = [0x0a]
+keyLeft        = [0x08]
+keyRight       = [0x09]
 
 keyShiftUp    = csi ++ [0x4d]
 keyShiftDown  = csi ++ [0x4c]

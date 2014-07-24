@@ -238,18 +238,21 @@ mSemigraphic True  = [so]
 mSemigraphic False = [si]
 
 -- | The Minitel uses two character sets: G0 and G1
-data CharSet = G0 | G1
+data CharSet = G0 | G1 | G'0 | G'1
 
 -- | Chooses which character set will be redefined. Useful only for the
 --   mRedesign function.
 mDefineSet :: CharSet -> MString
-mDefineSet G0 = [us, 0x23, 0x20, 0x20, 0x20, 0x42, 0x49]
-mDefineSet G1 = [us, 0x23, 0x20, 0x20, 0x20, 0x43, 0x49]
+mDefineSet G'0 = [us, 0x23, 0x20, 0x20, 0x20, 0x42, 0x49]
+mDefineSet G'1 = [us, 0x23, 0x20, 0x20, 0x20, 0x43, 0x49]
+mDefineSet _   = error "G0 or G1 charsets cannot be redefined"
 
 -- | Chooses the character set to use
 mUseSet :: CharSet -> MString
-mUseSet G0 = [esc, 0x28, 0x20, 0x42]
-mUseSet G1 = [esc, 0x29, 0x20, 0x43]
+mUseSet G0  = [esc, 0x28, 0x40]
+mUseSet G1  = [esc, 0x29, 0x63]
+mUseSet G'0 = [esc, 0x28, 0x20, 0x42]
+mUseSet G'1 = [esc, 0x29, 0x20, 0x43]
 
 -- | A character design is a list of 10 Strings. Each string contains 8
 --   characters, either '1' or '0', thus allowing you to simple write the
@@ -277,12 +280,13 @@ mDesigns = map mDesign
 mRedesign :: Int -> [CharDesign] -> CharSet -> MString
 mRedesign fromChar designs charset =
     mDefineSet charset
+    ++ [us, 0x23, fromChar, 0x30]
     ++ (concat . mDesigns) designs
     ++ [us, 0x41, 0x41]
     ++ mUseSet charset
 
 -- | Draw a rectangle on the Minitel Screen
-mRectangle :: Int -> Int -> Int -> Int -> Color -> MString
+mRectangle :: ToMColor a => Int -> Int -> Int -> Int -> a -> MString
 mRectangle x y w h color = concat . concat $ map mLine [y .. (y + h - 1)]
     where mLine y = [ mLocate x y
                     , mBackground color
