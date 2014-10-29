@@ -53,7 +53,7 @@ instance Sendable (Maybe [MString]) where
     (<<<) minitel Nothing   = return ()
 
 instance Sendable Char where
-    (<<<) minitel c = putM (output minitel) [(toMNat . ord) c]
+    (<<<) minitel c = putM (output minitel) [(mnat . ord) c]
 
 instance Sendable MCall where
     (<<<) minitel (mSend, _) = minitel <<< mSend

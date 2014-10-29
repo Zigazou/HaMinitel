@@ -14,7 +14,6 @@ position etc. without remembering the codes.
 module Minitel.Generator where
 
 import           Data.Char
-import           Data.List.Split   (splitEvery)
 import           Minitel.Constants
 import           Minitel.MNatural
 import           Minitel.MString
@@ -124,16 +123,16 @@ mLocate x y = [us, 0x40 + y, 0x40 + x]
 --   the length of the generated MString
 mMove :: Int -> Int -> MString
 mMove 0 0 = []
-mMove 0 y | y > 127 || y < 127 = error "y move too big"
-          | y >= -4 && y <= -1 = replicate (abs y) vt
-          | y >= 1  && y <=  4 = replicate y lf
-          | y <  0             = csi ++ (showInt . toMNat) y ++ [0x42]
-          | y >  0             = csi ++ (showInt . toMNat) y ++ [0x41]
-mMove x 0 | x > 127 || x < 127 = error "x move too big"
-          | x >= -4 && x <= -1 = replicate (abs x) bs
-          | x >= 1  && x <=  4 = replicate x tab
-          | x <  0             = csi ++ (showInt . toMNat) x ++ [0x43]
-          | x >  0             = csi ++ (showInt . toMNat) x ++ [0x44]
+mMove 0 y | y > 127 || y < -127 = error "y move too big"
+          | y >= -4 && y <= -1  = replicate (abs y) vt
+          | y >= 1  && y <=  4  = replicate y lf
+          | y <  0              = csi ++ (showInt . mnat) (abs y) ++ [0x42]
+          | y >  0              = csi ++ (showInt . mnat) y ++ [0x41]
+mMove x 0 | x > 127 || x < -127 = error "x move too big"
+          | x >= -4 && x <= -1  = replicate (abs x) bs
+          | x >= 1  && x <=  4  = replicate x tab
+          | x <  0              = csi ++ (showInt . mnat) (abs x) ++ [0x43]
+          | x >  0              = csi ++ (showInt . mnat) x ++ [0x44]
 mMove x y = mMove x 0 ++ mMove 0 y
 
 -- | Move cursor to the start of the current line.
@@ -208,7 +207,7 @@ mRepeat :: MNat -> MNat -> MString
 mRepeat count c | count == 0  = []
                 | count == 1  = [c]
                 | count == 2  = [c, c]
-                | count <  87 = [c, rep, 0x40 + count - 1]
+                | count <  64 = [c, rep, 0x40 + count - 1]
                 | otherwise   = error "Count is too big"
 
 -- | Beep !!!
@@ -244,15 +243,8 @@ mSemigraphic :: Bool -> MString
 mSemigraphic True  = [so]
 mSemigraphic False = [si]
 
--- | The Minitel uses two character sets: G0 and G1
+-- | The Minitel uses four character sets: G0 and G1
 data CharSet = G0 | G1 | G'0 | G'1
-
--- | Chooses which character set will be redefined. Useful only for the
---   mRedesign function.
-mDefineSet :: CharSet -> MString
-mDefineSet G'0 = [us, 0x23, 0x20, 0x20, 0x20, 0x42, 0x49]
-mDefineSet G'1 = [us, 0x23, 0x20, 0x20, 0x20, 0x43, 0x49]
-mDefineSet _   = error "G0 or G1 charsets cannot be redefined"
 
 -- | Chooses the character set to use
 mUseSet :: CharSet -> MString
@@ -261,41 +253,8 @@ mUseSet G1  = [esc, 0x29, 0x63]
 mUseSet G'0 = [esc, 0x28, 0x20, 0x42]
 mUseSet G'1 = [esc, 0x29, 0x20, 0x43]
 
--- | A character design is a list of 10 Strings. Each string contains 8
---   characters, either '1' or '0', thus allowing you to simple write the
---   character design using Haskell code.
-type CharDesign = [String]
-
--- | Generate the MString used to redefine one character. Useful only for the
---   mRedesign function
-mDesign :: CharDesign -> MString
-mDesign design = map bitsToMtel ((splitEvery 6 . concat) design) ++ [0x30]
-    where bitsToNat = foldl (\a v -> 2 * a + (if v == '1' then 1 else 0)) 0
-          bitsToMtel s = 0x40 + bitsToNat s * (if length s == 2 then 16 else 1)
-
--- | Generate the MString used to redefine several characters. Useful only for
---   the mRedesign function
-mDesigns :: [CharDesign] -> [MString]
-mDesigns = map mDesign
-
--- | Redefine characters given the ord of the first character as the first
---   argument. The character set must also be indicated. It will be
---   automatically selected after the redefinition.
-mRedesign :: MNat -> [CharDesign] -> CharSet -> MString
-mRedesign fromChar designs charset =
-    mDefineSet charset
-    ++ [us, 0x23, fromChar, 0x30]
-    ++ (concat . mDesigns) designs
-    ++ [us, 0x41, 0x41]
-    ++ mUseSet charset
-
 -- | Draw a rectangle on the Minitel Screen
-mRectangle :: ToMColor a => MNat
-                         -> MNat
-                         -> MNat
-                         -> MNat
-                         -> a
-                         -> MString
+mRectangle :: ToMColor a => MNat -> MNat -> MNat -> MNat -> a -> MString
 mRectangle x y w h color = concat . concat $ map mLine [y .. (y + h - 1)]
     where mLine y = [ mLocate x y
                     , mBackground color
