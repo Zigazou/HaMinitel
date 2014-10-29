@@ -13,9 +13,13 @@ position etc. without remembering the codes.
 -}
 module Minitel.Generator where
 
-import Minitel.Constants
-import Minitel.MString
-import Data.Char
+import           Data.Char
+import           Data.List.Split   (splitEvery)
+import           Minitel.Constants
+import           Minitel.MNatural
+import           Minitel.MString
+
+default (MNat)
 
 -- | The Minitel supports 3 modes, with VideoTex being the standard one with
 --   semigraphic 40 columns. Terminal (TeleInformatique) mode is able to
@@ -25,7 +29,7 @@ data MMode = VideoTex | Mixed | Terminal
 
 -- | Though the Minitel is generally shipped with a monochrome screen, it
 --   actually supports colors
-type MColor = Int
+type MColor = MNat
 
 -- | Type class helping to convert a color to the actual color code of the
 --   Minitel
@@ -62,7 +66,7 @@ instance ToMColor Grey where
         Grey6 -> 3
         Grey7 -> 7
 
--- | Switch from one mode to another. Note that all modes combinations are not 
+-- | Switch from one mode to another. Note that all modes combinations are not
 --   supported. For example, you cannot go directly from the Terminal mode to
 --   the Mixed mode, you have to go back to VideoTex and then to Mixed.
 --   Trying to go from a mode to the same mode will do nothing
@@ -112,7 +116,7 @@ mBackground color = [esc, 0x50 + toMColor color]
 -- | Move cursor to an absolute position. Rows and columns starts at 1
 --   The 0 row is the status line (at the very top of the screen) and is
 --   handled differently from the rest of the screen by the Minitel.
-mLocate :: Int -> Int -> MString
+mLocate :: MNat -> MNat -> MString
 mLocate 1 1 = [rs]
 mLocate x y = [us, 0x40 + y, 0x40 + x]
 
@@ -120,14 +124,16 @@ mLocate x y = [us, 0x40 + y, 0x40 + x]
 --   the length of the generated MString
 mMove :: Int -> Int -> MString
 mMove 0 0 = []
-mMove 0 y | y >= -4 && y <= -1 = replicate (abs y) vt
+mMove 0 y | y > 127 || y < 127 = error "y move too big"
+          | y >= -4 && y <= -1 = replicate (abs y) vt
           | y >= 1  && y <=  4 = replicate y lf
-          | y <  0             = csi ++ showInt y ++ [0x42]
-          | y >  0             = csi ++ showInt y ++ [0x41]
-mMove x 0 | x >= -4 && x <= -1 = replicate (abs x) bs
+          | y <  0             = csi ++ (showInt . toMNat) y ++ [0x42]
+          | y >  0             = csi ++ (showInt . toMNat) y ++ [0x41]
+mMove x 0 | x > 127 || x < 127 = error "x move too big"
+          | x >= -4 && x <= -1 = replicate (abs x) bs
           | x >= 1  && x <=  4 = replicate x tab
-          | x <  0             = csi ++ showInt x ++ [0x43]
-          | x >  0             = csi ++ showInt x ++ [0x44]
+          | x <  0             = csi ++ (showInt . toMNat) x ++ [0x43]
+          | x >  0             = csi ++ (showInt . toMNat) x ++ [0x44]
 mMove x y = mMove x 0 ++ mMove 0 y
 
 -- | Move cursor to the start of the current line.
@@ -135,17 +141,16 @@ mGotoStartOfLine :: MString
 mGotoStartOfLine = [cr]
 
 -- | The Minitel is able to double width or height of characters
-data CharSize = SimpleWidth  | DoubleWidth
-              | SimpleHeight | DoubleHeight
+data CharWidth = SimpleWidth | DoubleWidth deriving Show
+data CharHeight = SimpleHeight | DoubleHeight deriving Show
 
 -- | Change character size. The first argument is the width, the second the
 --   height
-mSize :: CharSize -> CharSize -> MString
+mSize :: CharWidth -> CharHeight -> MString
 mSize SimpleWidth SimpleHeight = [esc, 0x4c + 0]
 mSize SimpleWidth DoubleHeight = [esc, 0x4c + 1]
 mSize DoubleWidth SimpleHeight = [esc, 0x4c + 2]
 mSize DoubleWidth DoubleHeight = [esc, 0x4c + 3]
-mSize h           w            = mSize w h
 
 -- | Enable or disable characters underscoring. No underscoring by default.
 mUnderscore :: Bool -> MString
@@ -199,7 +204,7 @@ mClear ReallyEverything = mClear Everything ++ mClear StatusLine
 
 -- | Repeat a character. The Minitel has a special function for repeating
 --   characters which helps save bandwidth.
-mRepeat :: Int -> Int -> MString
+mRepeat :: MNat -> MNat -> MString
 mRepeat count c | count == 0  = []
                 | count == 1  = [c]
                 | count == 2  = [c, c]
@@ -220,7 +225,7 @@ type WhatToInsert = WhatToRemove
 --   removing columns only concerns the current line. Removing row concerns
 --   all columns. When removing a column, characters on its right are moved
 --   on the left. When removing a row, characters below it are moved upward.
-mRemove :: WhatToRemove -> Int -> MString
+mRemove :: WhatToRemove -> MNat -> MString
 mRemove Column count = csi ++ showInt count ++ [0x50]
 mRemove Row    count = csi ++ showInt count ++ [0x4d]
 
@@ -229,8 +234,8 @@ mRemove Row    count = csi ++ showInt count ++ [0x4d]
 --   all columns. When inserting a column, characters on its right are moved
 --   on the right. When inserting a row, characters below it are moved
 --   downward.
-mInsert :: WhatToInsert -> Int -> MString
-mInsert Column count = csi ++ [0x34, 0x68] ++ replicate count 0x20
+mInsert :: WhatToInsert -> MNat -> MString
+mInsert Column count = csi ++ [0x34, 0x68] ++ replicate (fromMNat count) 0x20
                     ++ csi ++ [0x34, 0x6c]
 mInsert Row    count = csi ++ showInt count ++ [0x4c]
 
@@ -264,12 +269,9 @@ type CharDesign = [String]
 -- | Generate the MString used to redefine one character. Useful only for the
 --   mRedesign function
 mDesign :: CharDesign -> MString
-mDesign design = map bits' ((multiSplit 6 . concat) design) ++ [0x30]
-    where bits = foldl (\a v -> 2 * a + (if v == '1' then 1 else 0)) 0
-          bits' s = 0x40 + bits s * (if length s == 2 then 16 else 1)
-          multiSplit _ [] = []
-          multiSplit nb s = start:multiSplit nb end
-              where (start, end) = splitAt nb s
+mDesign design = map bitsToMtel ((splitEvery 6 . concat) design) ++ [0x30]
+    where bitsToNat = foldl (\a v -> 2 * a + (if v == '1' then 1 else 0)) 0
+          bitsToMtel s = 0x40 + bitsToNat s * (if length s == 2 then 16 else 1)
 
 -- | Generate the MString used to redefine several characters. Useful only for
 --   the mRedesign function
@@ -279,7 +281,7 @@ mDesigns = map mDesign
 -- | Redefine characters given the ord of the first character as the first
 --   argument. The character set must also be indicated. It will be
 --   automatically selected after the redefinition.
-mRedesign :: Int -> [CharDesign] -> CharSet -> MString
+mRedesign :: MNat -> [CharDesign] -> CharSet -> MString
 mRedesign fromChar designs charset =
     mDefineSet charset
     ++ [us, 0x23, fromChar, 0x30]
@@ -288,12 +290,18 @@ mRedesign fromChar designs charset =
     ++ mUseSet charset
 
 -- | Draw a rectangle on the Minitel Screen
-mRectangle :: ToMColor a => Int -> Int -> Int -> Int -> a -> MString
+mRectangle :: ToMColor a => MNat
+                         -> MNat
+                         -> MNat
+                         -> MNat
+                         -> a
+                         -> MString
 mRectangle x y w h color = concat . concat $ map mLine [y .. (y + h - 1)]
     where mLine y = [ mLocate x y
                     , mBackground color
                     , mRepeat w 0x20
                     ]
+
 -- | Change Minitel speed
 mSpeed :: Int -> MCall
 mSpeed 300  = (pro2 ++ [prog, b300 ], pro2Length)

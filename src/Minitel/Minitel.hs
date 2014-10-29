@@ -12,21 +12,22 @@ This module provides to deal with Minitel communications.
 -}
 module Minitel.Minitel where
 
-import Minitel.Generator
-import Minitel.Queue
-import Minitel.MString
-import Minitel.Constants
+import           Minitel.Constants
+import           Minitel.Generator
+import           Minitel.MNatural
+import           Minitel.MString
+import           Minitel.Queue
 
-import System.Hardware.Serialport
-import qualified Data.ByteString as B
+import qualified Data.ByteString               as B
+import           System.Hardware.Serialport
 
-import Control.Concurrent
-import Control.Concurrent.STM.TQueue
-import Control.Concurrent.STM
+import           Control.Concurrent
+import           Control.Concurrent.STM
+import           Control.Concurrent.STM.TQueue
 
-import Control.Monad
+import           Control.Monad
 
-import Data.Char
+import           Data.Char
 
 class Sendable a where
     (<<<) :: Minitel -> a -> IO ()
@@ -52,7 +53,7 @@ instance Sendable (Maybe [MString]) where
     (<<<) minitel Nothing   = return ()
 
 instance Sendable Char where
-    (<<<) minitel c = putM (output minitel) [ord c]
+    (<<<) minitel c = putM (output minitel) [(toMNat . ord) c]
 
 instance Sendable MCall where
     (<<<) minitel (mSend, _) = minitel <<< mSend
@@ -75,7 +76,7 @@ mConfirmation minitel (mSend, mReceive) = do
 mCall :: Minitel -> MCall -> IO MString
 mCall minitel (mSend, count) = do
     putM (output minitel) mSend
-    return =<< readNCount (getter minitel) count
+    return =<< readNCount (getter minitel) (fromMNat count)
 
 -- | Waits for an MString of @count@ elements coming from the Minitel. If it
 --   takes too long, returns what has already been collected.
@@ -92,7 +93,7 @@ readNCount getter count = readNMString getter isComplete
     where isComplete seq = length seq == count
 
 -- | Returns the getter for a Minitel
-getter :: Minitel -> IO Int
+getter :: Minitel -> IO MNat
 getter minitel = get $ input minitel
 
 -- | Waits for a complete MString coming from the Minitel. If it takes too
@@ -132,7 +133,7 @@ readNMString getter isComplete = readNMString' []
 waitFor :: (Eq a) => Int -> IO a -> IO (Maybe a)
 waitFor delay getter = do
     done <- newEmptyMVar
-    
+
     -- Run a race between the reader and the waiter
     reader <- forkIO $ getter            >>= \c -> putMVar done $ Just c
     waiter <- forkIO $ threadDelay delay >>        putMVar done Nothing
@@ -174,7 +175,7 @@ setSpeed m rate = do
     let settings = baseSettings { commSpeed = spBitRate rate }
     m <- minitel "" settings
     return m
-    
+
     --answer <- mCall m $ mSpeed rate
     {-
     if length answer == pro2Length
@@ -191,7 +192,7 @@ waitForMinitel :: Minitel -> IO MString
 waitForMinitel minitel = blockOn mIdentification
     where blockOn (mSend, count) = do
             putM (output minitel) mSend
-            return =<< readBCount (getter minitel) count
+            return =<< readBCount (getter minitel) (fromMNat count)
 
 -- | Opens a full-duplex connection to a Minitel. The default serial is set
 --   to \/dev\/ttyUSB0.
@@ -215,7 +216,7 @@ minitel dev settings = do
         recvLoop s q = forever $ do
             b <- recv s 1
             when (1 <= B.length b) $ (put q . fromIntegral . B.head) b
-        
+
 -- | Kills a minitel, stopping its threads
 killMinitel :: Minitel -> IO ()
 killMinitel minitel = do

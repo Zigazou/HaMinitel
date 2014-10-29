@@ -11,12 +11,15 @@ MString Provides a structure holding a sequence of values for the Minitel.
 -}
 module Minitel.MString where
 
-import Data.Char
-import qualified Data.ByteString as B
-import Minitel.Constants
+import qualified Data.ByteString   as B
+import           Data.Char
+import           Minitel.Constants
+import           Minitel.MNatural
+
+default (MNat)
 
 -- | An MString is just an Int list
-type MString       = [Int]
+type MString       = [MNat]
 
 -- | An MConfirmation is composed of two MString, the first is to be sent to
 --   the Minitel and the second is what we should receive if everything went
@@ -26,12 +29,12 @@ type MConfirmation = (MString, MString)
 -- | An MCall is composed ot an MString and an Int, the MString is to be sent
 --   to the Minitel and the Int is the length of the MString we should receive
 --   if everything went well
-type MCall         = (MString, Int)
+type MCall         = (MString, MNat)
 
 -- | showInt will return an MString generated from an Int. For example, if it
 --   is called showInt 27, it will return [0x32, 0x37]
-showInt :: Int -> MString
-showInt i = map ord $ show i
+showInt :: MNat -> MString
+showInt i = map (toMNat . ord) $ show i
 
 -- | Check if an MString received from the Minitel is complete. For example,
 --   if the Minitel sent us an 0x19, it should be followed by another value.
@@ -50,41 +53,41 @@ completeReturn _                  = True
 --   no VideoTex counterpart, it is simply ignored and suppressed from the
 --   outputted MString
 toVideotex :: Char -> MString
-toVideotex c 
+toVideotex c
     | c == '£'  = [ss2, 0x23]
     | c == '°'  = [ss2, 0x30]
-    | c == '±'  = [ss2, 0x31] 
+    | c == '±'  = [ss2, 0x31]
     | c == '←'  = [ss2, 0x2C]
     | c == '↑'  = [ss2, 0x2D]
     | c == '→'  = [ss2, 0x2E]
-    | c == '↓'  = [ss2, 0x2F] 
+    | c == '↓'  = [ss2, 0x2F]
     | c == '¼'  = [ss2, 0x3C]
     | c == '½'  = [ss2, 0x3D]
-    | c == '¾'  = [ss2, 0x3E] 
+    | c == '¾'  = [ss2, 0x3E]
     | c == 'ç'  = accCedilla     ++ [0x63]
-    | c == '’'  = accCedilla     ++ [0x27] 
+    | c == '’'  = accCedilla     ++ [0x27]
     | c == 'à'  = accGrave       ++ [0x61]
     | c == 'á'  = accAcute       ++ [0x61]
     | c == 'â'  = accCirconflexe ++ [0x61]
-    | c == 'ä'  = accUmlaut      ++ [0x61] 
+    | c == 'ä'  = accUmlaut      ++ [0x61]
     | c == 'è'  = accGrave       ++ [0x65]
     | c == 'é'  = accAcute       ++ [0x65]
     | c == 'ê'  = accCirconflexe ++ [0x65]
-    | c == 'ë'  = accUmlaut      ++ [0x65] 
+    | c == 'ë'  = accUmlaut      ++ [0x65]
     | c == 'ì'  = accGrave       ++ [0x69]
     | c == 'í'  = accAcute       ++ [0x69]
     | c == 'î'  = accCirconflexe ++ [0x69]
-    | c == 'ï'  = accUmlaut      ++ [0x69] 
+    | c == 'ï'  = accUmlaut      ++ [0x69]
     | c == 'ò'  = accGrave       ++ [0x6F]
     | c == 'ó'  = accAcute       ++ [0x6F]
     | c == 'ô'  = accCirconflexe ++ [0x6F]
-    | c == 'ö'  = accUmlaut      ++ [0x6F] 
+    | c == 'ö'  = accUmlaut      ++ [0x6F]
     | c == 'ù'  = accGrave       ++ [0x75]
     | c == 'ú'  = accAcute       ++ [0x75]
     | c == 'û'  = accCirconflexe ++ [0x75]
-    | c == 'ü'  = accUmlaut      ++ [0x75] 
+    | c == 'ü'  = accUmlaut      ++ [0x75]
     | c == 'Œ'  = [ss2, 0x6A]
-    | c == 'œ'  = [ss2, 0x7A] 
+    | c == 'œ'  = [ss2, 0x7A]
     | c == 'ß'  = [ss2, 0x7B]
     | c == 'β'  = [ss2, 0x7B]
     | isAscii c = [(fromIntegral . ord) c]

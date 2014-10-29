@@ -27,22 +27,22 @@ isMinitelChar c = elem c minitelChars
 data Modifier = Plain | Shift | Ctrl | CtrlShift
 
 -- | Every possible key on the Minitel keyboard (visible + functions)
-data Key = KeyAlpha Char
-         | KeyTOC Modifier
-         | KeyCancel Modifier
-         | KeyPrev Modifier
-         | KeyRepeat Modifier
-         | KeyGuide Modifier
+data Key = KeyAlpha      Char
+         | KeyTOC        Modifier
+         | KeyCancel     Modifier
+         | KeyPrev       Modifier
+         | KeyRepeat     Modifier
+         | KeyGuide      Modifier
          | KeyCorrection Modifier
-         | KeyNext Modifier
-         | KeySend Modifier
+         | KeyNext       Modifier
+         | KeySend       Modifier
          | KeyConnection Modifier
-         | KeyReturn Modifier
-         | KeyEsc Modifier
-         | KeyLeft Modifier
-         | KeyRight Modifier
-         | KeyUp Modifier
-         | KeyDown Modifier
+         | KeyReturn     Modifier
+         | KeyEsc        Modifier
+         | KeyLeft       Modifier
+         | KeyRight      Modifier
+         | KeyUp         Modifier
+         | KeyDown       Modifier
 
 -- | Converts an MString to a key
 toKey :: MString -> Key

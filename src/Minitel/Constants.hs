@@ -12,10 +12,11 @@ is in french).
 -}
 module Minitel.Constants where
 
-import Data.Char
+import           Data.Char
+import           Minitel.MNatural
 
 -- No need for Integer default values, they are overkill for the Minitel
-default (Int, Double)
+default (MNat)
 
 -- * ASCII-Minitel control codes
 --   Minitel follows the ASCII control codes standard except for some values
