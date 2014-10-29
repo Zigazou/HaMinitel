@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -fno-warn-missing-signatures -fno-warn-type-defaults #-}
 {-|
 Module      : MUnicode
 Description : Unicode values understandable by the Minitel
@@ -9,9 +10,9 @@ Portability : POSIX
 
 Unicode values understandable by the Minitel
 -}
-module Minitel.MUnicode where
+module Minitel.Constants.MUnicode where
 
-import           Data.Char
+import           Data.Char (chr)
 
 poundSign                       = chr 0xa3
 degreeSign                      = chr 0xb0

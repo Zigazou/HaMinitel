@@ -11,8 +11,6 @@ This module provides a signal management designed for the Minitel.
 -}
 module Minitel.UI.Signal where
 
-import Minitel.Key
-
 data Signal = Key
             | EnterWidget
             | LeaveWidget

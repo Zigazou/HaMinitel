@@ -12,7 +12,7 @@ whose values are [0..127]. The MNat data type allows to use such numbers as if
 they were standard Int while ensuring that we use only 7 bits.
 -}
 
-module Minitel.MNatural(MNat, mnat, fromMNat) where
+module Minitel.Type.MNatural (MNat, mnat, fromMNat) where
 
 -- | The MNat type. The constructor is hidden.
 newtype MNat = MakeMNat Int

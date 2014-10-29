@@ -17,8 +17,9 @@ import           System.Exit         (exitFailure)
 import           Test.QuickCheck
 import           Test.QuickCheck.All (quickCheckAll)
 
-import           Minitel.Generator
-import           Minitel.MDesign
+import           Minitel.Generate.Generator
+import           Minitel.Generate.MDesign
+import           Minitel.Type.Videotex
 
 -- | Test mSize function
 instance Arbitrary CharWidth where

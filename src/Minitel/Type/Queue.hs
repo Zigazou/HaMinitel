@@ -9,15 +9,14 @@ Portability : POSIX
 
 Provides a shared queue for dealing with a Minitel
 -}
-module Minitel.Queue where
+module Minitel.Type.Queue where
 
-import           Minitel.MNatural
-import           Minitel.MString
+import           Minitel.Type.MNatural
+import           Minitel.Type.MString
 
 import           Control.Concurrent.STM        (atomically)
 import           Control.Concurrent.STM.TQueue (TQueue, readTQueue, writeTQueue)
 import           Control.Monad                 (forM_)
-import qualified Data.ByteString               as B
 
 -- | A queue is just a TQueue of MNat
 type Queue = TQueue MNat

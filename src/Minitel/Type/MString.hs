@@ -9,13 +9,12 @@ Portability : POSIX
 
 MString Provides a structure holding a sequence of values for the Minitel.
 -}
-module Minitel.MString where
+module Minitel.Type.MString where
 
-import qualified Data.ByteString   as B
 import           Data.Char
-import           Minitel.Constants
-import           Minitel.MNatural
-import           Minitel.MUnicode
+import           Minitel.Constants.Constants
+import           Minitel.Type.MNatural
+import           Minitel.Constants.MUnicode
 
 default (MNat)
 

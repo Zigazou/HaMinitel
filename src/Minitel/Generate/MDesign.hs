@@ -9,16 +9,16 @@ Portability : POSIX
 
 This module allows to redefine characters (Minitel 2).
 -}
-module Minitel.MDesign (
+module Minitel.Generate.MDesign (
     CharDesign, charDesign, mDefineSet, mDesign, mRedesign
 ) where
 
-import           Data.Char
-import           Data.List.Split   (splitEvery)
-import           Minitel.Constants
-import           Minitel.MNatural
-import           Minitel.MString
-import           Minitel.Generator
+import           Data.List.Split   (chunksOf)
+import           Minitel.Constants.Constants
+import           Minitel.Type.MNatural
+import           Minitel.Type.MString
+import           Minitel.Type.Videotex
+import           Minitel.Generate.Generator
 
 default (MNat)
 
@@ -44,7 +44,7 @@ mDefineSet _   = error "G0 or G1 charsets cannot be redefined"
 --   mRedesign function
 mDesign :: CharDesign -> MString
 mDesign (MakeCharDesign design) =
-    map bitsToMtel ((splitEvery 6 . concat) design) ++ [0x30]
+    map bitsToMtel ((chunksOf 6 . concat) design) ++ [0x30]
     where bitsToNat = foldl (\a v -> 2 * a + (if v == '1' then 1 else 0)) 0
           bitsToMtel s = 0x40 + bitsToNat s * (if length s == 2 then 16 else 1)
 

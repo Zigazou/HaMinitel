@@ -15,12 +15,11 @@ A text field is in fact a small window on a string value.
 -}
 module Minitel.UI.TextField where
 
-import Minitel.MString
-import Minitel.Minitel
-import Minitel.Generator
+import Minitel.Type.MNatural
+import Minitel.Generate.Generator
+import Minitel.Generate.Configuration
 import Minitel.Key
 import Minitel.UI.Widget
-import Data.Char
 
 import Control.Concurrent.MVar
 
@@ -29,7 +28,7 @@ type TFState = State (String, Int)
 
 insertChar :: TFState -> Char -> TFState
 insertChar (State (str, pos)) c = State (insert str c pos, pos + 1)
-    where insert s c p = (take p s) ++ [c] ++ (drop p s)
+    where insert s c' p = (take p s) ++ [c'] ++ (drop p s)
 
 deleteChar :: TFState -> TFState
 deleteChar (State (str,pos)) = State (delete str pos, pos)
@@ -42,30 +41,31 @@ deleteChar (State (str,pos)) = State (delete str pos, pos)
 pad :: Int -> String -> String
 pad 0 ""     = ""
 pad l ""     = ' ':pad (l - 1) ""
-pad 0 (x:xs) = ""
-pad l (x:xs) = ' ':pad (l - 1) xs
+pad 0 (_:_)  = ""
+pad l (_:xs) = ' ':pad (l - 1) xs
 
 -- | A text field widget is used to manage simple user input (an input text
 --   field on one line)
-data TextField = TextField CommonAttributes (MVar TFState) Int
+data TextField = TextField CommonAttributes (MVar TFState) MNat
     deriving Eq
 
+width :: TextField -> MNat
 width (TextField _ _ w) = w
 
 -- | Construct a new TextField given common attributes, width, initial value.
 newTextField :: CommonAttributes -- ^ Common attributes (x, y, colors etc.)
-             -> Int              -- ^ Visible width
+             -> MNat             -- ^ Visible width
              -> String           -- ^ Initial value
              -> IO TextField
-newTextField common w init = do
-    mvState <- newMVar $ State (init, 0)
-    return $ TextField common mvState w
+newTextField common' w init' = do
+    mvState <- newMVar $ State (init', 0)
+    return $ TextField common' mvState w
 
 -- | A TextField has a state
 instance WithState TextField TFState where
     state (TextField _ st _) = st
     withState widget func = modifyMVar (state widget) func'
-        where func' state = return $ func widget state
+        where func' state' = return $ func widget state'
 
 -- | Answers to signals
 instance Widget TextField where
@@ -75,7 +75,7 @@ instance Widget TextField where
 -- | Answers to signals
 instance Focusable TextField where
     enter widget  = withState widget doEnter
-    leave widget  = return $ Just [ mVisibleCursor False ]
+    leave _       = return $ Just [ mVisibleCursor False ]
 
     -- | Supported keys in the textfield
     keypress widget (KeyLeft Plain)       = withState widget doLeft
@@ -88,21 +88,21 @@ instance Focusable TextField where
 
 -- | Draw a TextField
 doDraw :: TextField -> TFState -> (TFState, MMString)
-doDraw tf state@(State (s, pos)) =
-    ( state
+doDraw tf state'@(State (s, _)) =
+    ( state'
     , Just [ mLocate (posX c) (posY c)
            , mForeground (foreground c)
            , mBackground (background c)
-           , mString (mode c) $ pad (width tf) s
+           , mString (mode c) $ pad ((fromIntegral . width) tf) s
            ]
     )
     where c = common tf
 
 -- | The TextField receives focus
 doEnter :: TextField -> TFState -> (TFState, MMString)
-doEnter tf state@(State (s, pos)) =
-    ( state
-    , Just [ mLocate ((posX c) + pos) (posY c)
+doEnter tf state'@(State (_, pos)) =
+    ( state'
+    , Just [ mLocate (fromIntegral ((posX c) + mnat pos)) (fromIntegral (posY c))
            , mVisibleCursor True
            ]
     )
@@ -110,29 +110,29 @@ doEnter tf state@(State (s, pos)) =
 
 -- | Move cursor to the left
 doLeft :: TextField -> TFState -> (TFState, MMString)
-doLeft _ state@(State (s, pos))
-    | pos == 0  = (state, Just [ mBeep ])
+doLeft _ state'@(State (s, pos))
+    | pos == 0  = (state', Just [ mBeep ])
     | otherwise = (State (s, pos - 1), Just [ mMove (-1) 0 ])
 
 -- | Move cursor to the right
 doRight :: TextField -> TFState -> (TFState, MMString)
-doRight _ state@(State (s, pos))
-    | pos > (length s) = (state, Just [ mBeep ])
+doRight _ state'@(State (s, pos))
+    | pos > (length s) = (state', Just [ mBeep ])
     | otherwise        = (State (s, pos + 1), Just [ mMove 1 0 ])
 
 -- | Backspace key
 doCorrection :: TextField -> TFState -> (TFState, MMString)
-doCorrection _ state@(State (s, pos))
-    | pos == 0  = (state, Just [ mBeep ])
+doCorrection _ state'@(State (s, pos))
+    | pos == 0  = (state', Just [ mBeep ])
     | otherwise = (newState, Just [ mMove (-1) 0, [0x20], mMove (-1) 0 ])
     where newState = State (deleteNth (pos - 1) s, pos - 1)
           deleteNth _ [] = []
-          deleteNth 0 (x:xs) = xs
+          deleteNth 0 (_:xs) = xs
           deleteNth n (x:xs) = x:deleteNth (n - 1) xs
 
 -- | Insert a char
 doChar :: Char -> TextField -> TFState -> (TFState, MMString)
-doChar c tf state@(State (s, pos)) = (newState, Just [ mString m [c] ])
+doChar c tf (State (s, pos)) = (newState, Just [ mString m [c] ])
     where m        = mode $ common tf
           newState = State (s ++ [c], pos + 1)
 

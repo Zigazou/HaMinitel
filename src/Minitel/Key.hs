@@ -11,11 +11,12 @@ This module provides an abstraction to the Minitel keys.
 -}
 module Minitel.Key where
 
-import Minitel.Constants
-import Minitel.MString
+import Minitel.Constants.Constants
+import Minitel.Type.MString
 import Data.Char
 
 -- | Every possible character of the Minitel
+minitelChars :: [Char]
 minitelChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ\
                \äëïöüâêîôûàèùéçœŒ{}*$!:;,?./\\&(-_)=+'@0123456789 \
                \↑←→↓°÷±§"
@@ -70,5 +71,5 @@ toKey s
     | s == keyFuncNext       = KeyNext Plain
     | s == keyFuncConnection = KeyConnection Plain
     | otherwise              = error $ "Unsupported key: " ++ show s
-    where c = chr $ head s
+    where c = (chr . fromIntegral . head) s
 

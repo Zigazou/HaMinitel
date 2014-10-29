@@ -13,12 +13,9 @@ displaying a line of text.
 -}
 module Minitel.UI.Label where
 
-import Minitel.MString
-import Minitel.Minitel
-import Minitel.Generator
+import Minitel.Type.MNatural
+import Minitel.Generate.Generator
 import Minitel.UI.Widget
-
-import Control.Concurrent.MVar
 
 data Justification = JLeft | JCenter | JRight
     deriving Eq
@@ -27,12 +24,17 @@ data Justification = JLeft | JCenter | JRight
 --   field on one line)
 data Label = Label CommonAttributes -- ^ Common attributes
                    String           -- ^ Text to display
-                   Int              -- ^ Width
+                   MNat             -- ^ Width
                    Justification    -- ^ Justification (Center, Left, Right)
                    deriving Eq
 
-width         (Label _ _ w _) = w
-value         (Label _ s _ _) = s
+width :: Label -> MNat
+width (Label _ _ w _) = w
+
+value :: Label -> String
+value (Label _ s _ _) = s
+
+justification :: Label -> Justification
 justification (Label _ _ _ j) = j
 
 instance Widget Label where

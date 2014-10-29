@@ -15,7 +15,7 @@ widget.
 module Minitel.UI.Interface where
 
 import Minitel.UI.Widget
-import Minitel.MString
+import Minitel.Type.MString
 
 data Interface a where
     Interface :: Focusable a
@@ -31,12 +31,12 @@ focusables :: Interface a -> [a]
 focusables (Interface _ fs _) = fs
 
 newInterface :: Focusable a => [MString] -> [a] -> Interface a
-newInterface back focusables = Interface back focusables (head focusables)
+newInterface back focusables' = Interface back focusables' (head focusables')
 
 -- | Return the element preceding a specified element inside a list
 elemBefore :: (Eq a) => a -> [a] -> Maybe a
 elemBefore _ []   = Nothing
-elemBefore _ (w:[]) = Nothing
+elemBefore _ (_:[]) = Nothing
 elemBefore widget (p:w:ws)
     | w == widget = Just p
     | otherwise   = elemBefore widget (w:ws)
@@ -44,16 +44,16 @@ elemBefore widget (p:w:ws)
 -- | Return the element following a specified element inside a list
 elemAfter :: (Eq a) => a -> [a] -> Maybe a
 elemAfter _ []   = Nothing
-elemAfter _ (w:[]) = Nothing
+elemAfter _ (_:[]) = Nothing
 elemAfter widget (w:n:ws)
     | w == widget = Just n
     | otherwise   = elemAfter widget (n:ws)
 
 -- | Returns the next focusable widget from a list given a widget
 nextFocusable :: Eq a => Interface a -> Maybe a
-nextFocusable (Interface _ focusables current) = elemAfter current focusables
+nextFocusable (Interface _ focusables' current) = elemAfter current focusables'
 
 -- | Returns the previous focusable widget from a list given a widget
 prevFocusable :: Eq a => Interface a -> Maybe a
-prevFocusable (Interface _ focusables current) = elemBefore current focusables
+prevFocusable (Interface _ focusables' current) = elemBefore current focusables'
 

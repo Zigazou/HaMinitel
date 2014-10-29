@@ -12,9 +12,9 @@ This module provides a base widget model for the Minitel.
 -}
 module Minitel.UI.Widget where
 
-import Minitel.MString
-import Minitel.Minitel
-import Minitel.Generator
+import Minitel.Type.MString
+import Minitel.Type.MNatural
+import Minitel.Type.Videotex
 import Minitel.Key
 
 import Control.Concurrent.MVar
@@ -34,8 +34,8 @@ data State a = State a deriving Eq
 -- | Widgets all have common attributes
 data CommonAttributes = CommonAttributes
     { mode       :: MMode   -- ^ Minitel Mode (VideoTex, TeleInformatique...)
-    , posX       :: Int     -- ^ X position
-    , posY       :: Int     -- ^ Y position
+    , posX       :: MNat    -- ^ X position
+    , posY       :: MNat    -- ^ Y position
     , foreground :: Color   -- ^ Foreground color
     , background :: Color   -- ^ Background color
     }

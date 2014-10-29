@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -fno-warn-missing-signatures -fno-warn-type-defaults #-}
 {-|
 Module      : Constants
 Description : Values definitions from the Minitel universe
@@ -10,10 +11,9 @@ Portability : POSIX
 The names were translated from french into english (the original documentation
 is in french).
 -}
-module Minitel.Constants where
+module Minitel.Constants.Constants where
 
-import           Data.Char
-import           Minitel.MNatural
+import           Minitel.Type.MNatural
 
 -- No need for Integer default values, they are overkill for the Minitel
 default (MNat)
@@ -176,54 +176,3 @@ keyFuncTOC        = [dc3, 0x46]
 keyFuncCorrection = [dc3, 0x47]
 keyFuncNext       = [dc3, 0x48]
 keyFuncConnection = [dc3, 0x49]
-
--- | Minitel ability describes what the Minitel is able to do, since the
---   Minitel is a generic name for a complete family of terminals
-data Ability = Ability
-    { id         :: Char   -- ^ A Minitel is identified by a single letter
-    , name       :: String -- ^ Human french name
-    , reversible :: Bool   -- ^ Some Minitels can be used as a standard modem
-    , keyboard   :: String -- ^ First Minitels were ABCD, then Azerty or none
-    , maxSpeed   :: Int    -- ^ Max supported speed in bauds
-    , cols80     :: Bool   -- ^ Is terminal mode (80 columns) supported ?
-    , charDefine :: Bool   -- ^ are characters redefinable ?
-    } deriving (Show)
-
--- | A list of known Minitels and their abilities
-minitelAbilities =
-    [ Ability 'c' "Minitel 1"         False "ABCD"   1200 False False
-    , Ability 'd' "Minitel 10"        False "Azerty" 1200 False False
-    , Ability 'e' "Minitel 1 couleur" False "Azerty" 1200 False False
-    , Ability 'f' "Minitel 10"        True  "Azerty" 1200 False False
-    , Ability 'g' "Émulateur"         True  "Azerty" 9600 True  True
-    , Ability 'j' "Imprimante"        False ""       1200 False False
-    , Ability 'r' "Minitel 1"         True  "Azerty" 1200 False False
-    , Ability 's' "Minitel 1 couleur" True  "Azerty" 1200 False False
-    , Ability 't' "Terminatel 252"    False ""       1200 False False
-    , Ability 'u' "Minitel 1B"        True  "Azerty" 4800 True  False
-    , Ability 'v' "Minitel 2"         True  "Azerty" 9600 True  True
-    , Ability 'w' "Minitel 10B"       True  "Azerty" 4800 True  False
-    , Ability 'y' "Minitel 5"         True  "Azerty" 9600 True  True
-    , Ability 'z' "Minitel 12"        True  "Azerty" 9600 True  True
-    ]
-
--- | Base abilities, when you don't know the Minitel to which you are connected
-baseAbilities =
-    Ability '*' "Minitel inconnu"   False "ABCD"   1200 False False
-
--- | Maker identification codes
-makerCodes =
-    [ ('A', "Matra")
-    , ('B', "RTIC")
-    , ('C', "Telic-Alcatel")
-    , ('D', "Thomson")
-    , ('E', "CCS")
-    , ('F', "Fiet")
-    , ('G', "Fime")
-    , ('H', "Unitel")
-    , ('I', "Option")
-    , ('J', "Bull")
-    , ('K', "Télématique")
-    , ('L', "Desmet")
-    ]
-

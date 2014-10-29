@@ -12,18 +12,16 @@ This module provides to deal with Minitel communications.
 -}
 module Minitel.Minitel where
 
-import           Minitel.Constants
-import           Minitel.Generator
-import           Minitel.MNatural
-import           Minitel.MString
-import           Minitel.Queue
+import           Minitel.Generate.Configuration
+import           Minitel.Type.MNatural
+import           Minitel.Type.MString
+import           Minitel.Type.Queue
 
 import qualified Data.ByteString               as B
 import           System.Hardware.Serialport
 
 import           Control.Concurrent
 import           Control.Concurrent.STM
-import           Control.Concurrent.STM.TQueue
 
 import           Control.Monad
 
@@ -43,58 +41,58 @@ data Minitel = Minitel
 
 -- | Operator to send an MString to the Minitel
 instance Sendable MString where
-    (<<<) minitel = putM (output minitel)
+    (<<<) minitel' = putM (output minitel')
 
 instance Sendable [MString] where
-    (<<<) minitel = mapM_ (minitel <<<)
+    (<<<) minitel' = mapM_ (minitel' <<<)
 
 instance Sendable (Maybe [MString]) where
-    (<<<) minitel (Just ms) = mapM_ (minitel <<<) ms
-    (<<<) minitel Nothing   = return ()
+    (<<<) minitel' (Just ms) = mapM_ (minitel' <<<) ms
+    (<<<) _        Nothing   = return ()
 
 instance Sendable Char where
-    (<<<) minitel c = putM (output minitel) [(mnat . ord) c]
+    (<<<) minitel' c = putM (output minitel') [(mnat . ord) c]
 
 instance Sendable MCall where
-    (<<<) minitel (mSend, _) = minitel <<< mSend
+    (<<<) minitel' (mSend, _) = minitel' <<< mSend
 
 instance Sendable [MCall] where
-    (<<<) minitel = mapM_ (mCall minitel)
+    (<<<) minitel' = mapM_ (mCall minitel')
 
 -- | Sends an MString to the Minitel and waits for its answer. The answer
 --   should be the awaited one specified in the MConfirmation. If there is
 --   no answer from the Minitel or the answer is not the right one, returns
 --   False
 mConfirmation :: Minitel -> MConfirmation -> IO Bool
-mConfirmation minitel (mSend, mReceive) = do
-    putM (output minitel) mSend
-    answer <- readNMString (getter minitel) completeReturn
+mConfirmation minitel' (mSend, mReceive) = do
+    putM (output minitel') mSend
+    answer <- readNMString (getter minitel') completeReturn
     return (answer == mReceive)
 
 -- | Sends an MString to the Minitel and waits for its answer. It returns
 --   an MString of max length as specified in the MCall.
 mCall :: Minitel -> MCall -> IO MString
-mCall minitel (mSend, count) = do
-    putM (output minitel) mSend
-    return =<< readNCount (getter minitel) (fromMNat count)
+mCall minitel' (mSend, count) = do
+    putM (output minitel') mSend
+    return =<< readNCount (getter minitel') (fromMNat count)
 
 -- | Waits for an MString of @count@ elements coming from the Minitel. If it
 --   takes too long, returns what has already been collected.
 --   This is the blocking version.
 readBCount :: (Eq a) => IO a -> Int -> IO [a]
-readBCount getter count = readBMString getter isComplete
-    where isComplete seq = length seq == count
+readBCount getter' count = readBMString getter' isComplete
+    where isComplete sequ = length sequ == count
 
 -- | Waits for an MString of @count@ elements coming from the Minitel. If it
 --   takes too long, returns what has already been collected.
 --   This is the non-blocking version
 readNCount :: (Eq a) => IO a -> Int -> IO [a]
-readNCount getter count = readNMString getter isComplete
-    where isComplete seq = length seq == count
+readNCount getter' count = readNMString getter' isComplete
+    where isComplete sequ = length sequ == count
 
 -- | Returns the getter for a Minitel
 getter :: Minitel -> IO MNat
-getter minitel = get $ input minitel
+getter minitel' = get $ input minitel'
 
 -- | Waits for a complete MString coming from the Minitel. If it takes too
 --   long, returns what has already been collected. To determine if the MString
@@ -102,12 +100,12 @@ getter minitel = get $ input minitel
 --   is complete (True) or not (False).
 --   This is the blocking version.
 readBMString :: (Eq a) => IO a -> ([a] -> Bool) -> IO [a]
-readBMString getter isComplete = readBMString' []
+readBMString getter' isComplete = readBMString' []
     where readBMString' s
             | isComplete s = return s
-            | s == []      = getter >>= \value -> readBMString' [value]
+            | s == []      = getter' >>= \value -> readBMString' [value]
             | otherwise    = do
-                result <- waitFor 1000000 getter
+                result <- waitFor 1000000 getter'
                 case result of
                     Just value -> readBMString' $ s ++ [value]
                     Nothing    -> return s
@@ -118,11 +116,11 @@ readBMString getter isComplete = readBMString' []
 --   is complete (True) or not (False).
 --   This is the non-blocking version
 readNMString :: (Eq a) => IO a -> ([a] -> Bool) -> IO [a]
-readNMString getter isComplete = readNMString' []
+readNMString getter' isComplete = readNMString' []
     where readNMString' s
             | isComplete s = return s
             | otherwise    = do
-                result <- waitFor 200000 getter
+                result <- waitFor 200000 getter'
                 case result of
                     Just value -> readNMString' $ s ++ [value]
                     Nothing    -> return s
@@ -131,11 +129,11 @@ readNMString getter isComplete = readNMString' []
 --   running two threads. The first one to press the buzzer will stop the
 --   function and returns the result (either Just a or Nothing)
 waitFor :: (Eq a) => Int -> IO a -> IO (Maybe a)
-waitFor delay getter = do
+waitFor delay getter' = do
     done <- newEmptyMVar
 
     -- Run a race between the reader and the waiter
-    reader <- forkIO $ getter            >>= \c -> putMVar done $ Just c
+    reader <- forkIO $ getter'           >>= \c -> putMVar done $ Just c
     waiter <- forkIO $ threadDelay delay >>        putMVar done Nothing
 
     -- Wait for the first to win
@@ -148,6 +146,7 @@ waitFor delay getter = do
 
 -- | Base settings for the serial port on which is connected a Minitel.
 --   Standard configuration is 1200 bps, 7 bits, 1 stop, even parity.
+baseSettings :: SerialPortSettings
 baseSettings = SerialPortSettings
     { commSpeed   = CS1200
     , bitsPerWord = 7
@@ -173,8 +172,8 @@ setSpeed m rate = do
     threadDelay 500000
     killMinitel m
     let settings = baseSettings { commSpeed = spBitRate rate }
-    m <- minitel "" settings
-    return m
+    m' <- minitel "" settings
+    return m'
 
     --answer <- mCall m $ mSpeed rate
     {-
@@ -189,10 +188,10 @@ setSpeed m rate = do
 
 -- | waitForMinitel waits till the Minitel has displayed everything
 waitForMinitel :: Minitel -> IO MString
-waitForMinitel minitel = blockOn mIdentification
+waitForMinitel minitel' = blockOn mIdentification
     where blockOn (mSend, count) = do
-            putM (output minitel) mSend
-            return =<< readBCount (getter minitel) (fromMNat count)
+            putM (output minitel') mSend
+            return =<< readBCount (getter minitel') (fromMNat count)
 
 -- | Opens a full-duplex connection to a Minitel. The default serial is set
 --   to \/dev\/ttyUSB0.
@@ -219,7 +218,7 @@ minitel dev settings = do
 
 -- | Kills a minitel, stopping its threads
 killMinitel :: Minitel -> IO ()
-killMinitel minitel = do
-    killThread $ sender minitel
-    killThread $ receiver minitel
+killMinitel minitel' = do
+    killThread $ sender minitel'
+    killThread $ receiver minitel'
 
