@@ -8,7 +8,7 @@ Maintainer  : zigazou@free.fr
 Stability   : experimental
 Portability : POSIX
 
-This module provides a Dispatcher which will dispatch an event to a liste of
+This module provides a Dispatcher which will dispatch an event to a list of
 widget.
 -}
 module Minitel.UI.Dispatcher where

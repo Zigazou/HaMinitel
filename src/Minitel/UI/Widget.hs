@@ -16,17 +16,16 @@ import Minitel.Type.MString
 import Minitel.Type.MNatural
 import Minitel.Type.Videotex
 import Minitel.Key
+import Control.Applicative
 
 import Control.Concurrent.MVar
 
 -- | Widgets may return a list of MString when they receive signals or Nothing
 type MMString = Maybe [MString]
 
-(+++) :: MMString -> MMString -> MMString
-(+++) (Just a) (Just b) = Just (a ++ b)
-(+++) (Just a) Nothing  = Just a
-(+++) Nothing  (Just b) = Just b
-(+++) Nothing  Nothing  = Nothing
+-- | Concatenate MMString
+(+++) :: Maybe [a] -> Maybe [a] -> Maybe [a]
+(+++) x y = liftA2 (++) x y <|> x <|> y
 
 -- | Widgets may have some state attached to them
 data State a = State a deriving Eq

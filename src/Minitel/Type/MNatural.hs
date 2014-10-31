@@ -1,3 +1,4 @@
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-|
 Module      : Natural
 Description : Natural numbers for HaMinitel
@@ -24,22 +25,30 @@ instance Bounded MNat where
 
 -- | Converts an Int into an MNat
 mnat :: Int -> MNat
-mnat x | x < fromMNat (minBound :: MNat) = error "Number below minimum"
-       | x > fromMNat (maxBound :: MNat) = error "Number after maximum"
-       | otherwise = MakeMNat x
+mnat x | fromIntegral (minBound :: MNat) <= x && x <= fromIntegral (maxBound :: MNat) = MakeMNat x
+       | otherwise = error "Number out of bounds"
 
 -- | Converts an MNat into an Int
 fromMNat :: MNat -> Int
 fromMNat (MakeMNat i) = i
 
+-- | Converts an Int binary function to a MNat binary function
+fnat :: (Int -> Int -> t) -> (MNat -> MNat -> t)
+fnat f x y = f (fromMNat x) (fromMNat y)
+
+-- | Converts an Int binary function returning Int to a MNat binary function
+--   returning an MNat
+mfnat :: (Int -> Int -> Int) -> (MNat -> MNat -> MNat)
+mfnat f x y = mnat $ fnat f x y
+
 -- | You can do additions, substractions and multiplication with MNat
 instance Num MNat where
     fromInteger = mnat . fromIntegral
-    x + y       = mnat (fromMNat x + fromMNat y)
-    x - y       = mnat (fromMNat x - fromMNat y)
-    x * y       = mnat (fromMNat x * fromMNat y)
+    (+)         = mfnat (+)
+    (-)         = mfnat (-)
+    (*)         = mfnat (*)
     abs x       = x
-    signum x    = if fromMNat x == 0 then 0 else 1
+    signum      = mnat . signum . fromMNat
 
 -- | Allows to use toInteger with MNat
 instance Integral MNat where
@@ -54,6 +63,6 @@ instance Enum MNat where
 
 -- | MNat can do Real, Ord, Eq and Show
 instance Real MNat where toRational  = fromIntegral . fromMNat
-instance Ord  MNat where x <= y      = fromMNat x <= fromMNat y
-instance Eq   MNat where (==) x y    = fromMNat x == fromMNat y
+instance Ord  MNat where (<=)        = fnat (<=)
+instance Eq   MNat where (==)        = fnat (==)
 instance Show MNat where show        = show . fromMNat
