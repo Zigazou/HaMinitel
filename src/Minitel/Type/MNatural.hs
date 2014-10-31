@@ -16,7 +16,7 @@ they were standard Int while ensuring that we use only 7 bits.
 module Minitel.Type.MNatural (MNat, mnat, fromMNat) where
 
 -- | The MNat type. The constructor is hidden.
-newtype MNat = MakeMNat Int
+newtype MNat = MakeMNat Int deriving (Real, Eq, Ord, Show)
 
 -- | MNat is a bounded type
 instance Bounded MNat where
@@ -25,34 +25,35 @@ instance Bounded MNat where
 
 -- | Converts an Int into an MNat
 mnat :: Int -> MNat
-mnat x | fromIntegral (minBound :: MNat) <= x && x <= fromIntegral (maxBound :: MNat) = MakeMNat x
+mnat x | loLimit <= x && x <= hiLimit = MakeMNat x
        | otherwise = error "Number out of bounds"
+       where loLimit = fromIntegral (minBound :: MNat)
+             hiLimit = fromIntegral (maxBound :: MNat)
 
 -- | Converts an MNat into an Int
 fromMNat :: MNat -> Int
 fromMNat (MakeMNat i) = i
 
--- | Converts an Int binary function to a MNat binary function
-fnat :: (Int -> Int -> t) -> (MNat -> MNat -> t)
-fnat f x y = f (fromMNat x) (fromMNat y)
-
 -- | Converts an Int binary function returning Int to a MNat binary function
 --   returning an MNat
-mfnat :: (Int -> Int -> Int) -> (MNat -> MNat -> MNat)
-mfnat f x y = mnat $ fnat f x y
+mfnat :: (Int -> Int) -> (MNat -> MNat)
+mfnat f = mnat . f . fromMNat
+
+mfnat2 :: (Int -> Int -> Int) -> (MNat -> MNat -> MNat)
+mfnat2 f x y = mnat $ f (fromMNat x) (fromMNat y)
 
 -- | You can do additions, substractions and multiplication with MNat
 instance Num MNat where
     fromInteger = mnat . fromIntegral
-    (+)         = mfnat (+)
-    (-)         = mfnat (-)
-    (*)         = mfnat (*)
-    abs x       = x
-    signum      = mnat . signum . fromMNat
+    (+)         = mfnat2 (+)
+    (-)         = mfnat2 (-)
+    (*)         = mfnat2 (*)
+    abs         = mfnat abs
+    signum      = mfnat signum
 
 -- | Allows to use toInteger with MNat
 instance Integral MNat where
-    quotRem x y = (fromInteger $ x' `quot` y', fromInteger $ x' `rem` y')
+    quotRem x y = (fromInteger $ quot x' y', fromInteger $ rem x' y')
                   where (x', y') = (toInteger x, toInteger y)
     toInteger   = toInteger . fromMNat
 
@@ -61,8 +62,3 @@ instance Enum MNat where
     toEnum      = mnat
     fromEnum    = fromMNat
 
--- | MNat can do Real, Ord, Eq and Show
-instance Real MNat where toRational  = fromIntegral . fromMNat
-instance Ord  MNat where (<=)        = fnat (<=)
-instance Eq   MNat where (==)        = fnat (==)
-instance Show MNat where show        = show . fromMNat
