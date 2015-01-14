@@ -187,11 +187,12 @@ setSpeed m rate = do
     -}
 
 -- | waitForMinitel waits till the Minitel has displayed everything
-waitForMinitel :: Minitel -> IO MString
-waitForMinitel minitel' = blockOn mIdentification
-    where blockOn (mSend, count) = do
-            putM (output minitel') mSend
-            return =<< readBCount (getter minitel') (fromMNat count)
+waitForMinitel :: Minitel -> IO ()
+waitForMinitel minitel' = do
+    let (mSend, count) = mIdentification
+    putM (output minitel') mSend
+    _ <- readBCount (getter minitel') (fromMNat count)
+    return ()
 
 -- | Opens a full-duplex connection to a Minitel. The default serial is set
 --   to \/dev\/ttyUSB0.

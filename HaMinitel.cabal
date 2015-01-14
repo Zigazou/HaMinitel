@@ -1,5 +1,5 @@
 name:                HaMinitel
-version:             0.1.1
+version:             0.1.2
 synopsis:            An Haskell library to drive the french Minitel through a
                      serial port
 description:         HaMinitel allows you to drive a french Minitel through a
@@ -20,12 +20,16 @@ source-repository head
 
 library
     ghc-options:     -Wall
+                     -threaded
                      -fwarn-incomplete-patterns
                      -fwarn-incomplete-uni-patterns
                      -fno-warn-unused-do-bind
     exposed-modules: Minitel.Generate.MDesign
                      Minitel.Generate.Generator
                      Minitel.Generate.Configuration
+                     Minitel.Generate.PhotoVideotex
+                     Minitel.Generate.Photo.Parameter
+                     Minitel.Generate.Photo.To87
                      Minitel.UI.Dispatcher
                      Minitel.UI.Label
                      Minitel.UI.Widget
@@ -37,20 +41,40 @@ library
                      Minitel.Type.Queue
                      Minitel.Type.Videotex
                      Minitel.Type.Ability
+                     Minitel.Type.MLargeNumber
                      Minitel.Minitel
                      Minitel.Constants.Abilities
                      Minitel.Constants.Constants
+                     Minitel.Constants.Photo
                      Minitel.Constants.MUnicode
                      Minitel.Key
     build-depends: QuickCheck -any, base >= 4, bytestring -any,
-                   serialport >= 0.4, stm >= 2.4, mtl >= 2.2, split >= 0.2
+                   serialport >= 0.4, stm >= 2.4, mtl >= 2.2, split >= 0.2,
+                   binary >= 0.7, binary-bits >= 0.3, stringsearch >= 0.3
     exposed: True
     buildable: True
     hs-source-dirs: src
 
+executable demoJPEG
+    ghc-options:     -Wall
+                     -threaded
+    main-is:         demoJPEG.hs
+    build-depends:   base >= 4, bytestring -any, serialport >= 0.4, stm >= 2.4,
+                     mtl >= 2.2, split >= 0.2, binary-bits, HaMinitel
+    hs-source-dirs:  example
+
+executable testMString
+    ghc-options:     -Wall
+                     -threaded
+    main-is:         testMString.hs
+    build-depends:   base >= 4, bytestring -any, serialport >= 0.4, stm >= 2.4,
+                     mtl >= 2.2, split >= 0.2, binary-bits, HaMinitel
+    hs-source-dirs:  example
+
 test-suite testMain
     build-depends: QuickCheck -any, base >= 4, bytestring -any,
-                   serialport >= 0.4, stm >= 2.4, mtl >= 2.2, split >= 0.2
+                   serialport >= 0.4, stm >= 2.4, mtl >= 2.2, split >= 0.2,
+                   binary-bits
     type: exitcode-stdio-1.0
     main-is: testMain.hs
     buildable: True

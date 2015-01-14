@@ -25,7 +25,7 @@ import Data.Proxy
 newtype MNatN (lo :: Nat) (hi :: Nat) = MakeMNat Int
     deriving (Real, Eq, Ord, Show)
 
-type MNat = MNatN 0 127
+type MNat = MNatN 0 255
 
 -- | MNatN is a bounded type
 instance (KnownNat lo, KnownNat hi) => Bounded (MNatN lo hi) where

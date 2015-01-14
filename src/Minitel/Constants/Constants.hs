@@ -176,3 +176,4 @@ keyFuncTOC        = [dc3, 0x46]
 keyFuncCorrection = [dc3, 0x47]
 keyFuncNext       = [dc3, 0x48]
 keyFuncConnection = [dc3, 0x49]
+
