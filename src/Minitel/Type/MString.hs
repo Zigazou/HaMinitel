@@ -40,12 +40,12 @@ showInt i = map (mnat . ord) $ show i
 --   if the Minitel sent us an 0x19, it should be followed by another value.
 completeReturn :: MString -> Bool
 completeReturn []                 = False
-completeReturn [0x19]             = False
-completeReturn [0x13]             = False
-completeReturn [0x1b]             = False
-completeReturn [0x1b, 0x5b]       = False
-completeReturn [0x1b, 0x5b, 0x32] = False
-completeReturn [0x1b, 0x5b, 0x34] = False
+completeReturn [0x19]             = False -- eSS2
+completeReturn [0x13]             = False -- aDC3
+completeReturn [0x1b]             = False -- eESC
+completeReturn [0x1b, 0x5b]       = False -- eESC, eCSI
+completeReturn [0x1b, 0x5b, 0x32] = False -- eESC, eCSI, 0x32
+completeReturn [0x1b, 0x5b, 0x34] = False -- eESC, eCSI, 0x34
 completeReturn _                  = True
 
 -- | Translates a unicode character to its VideoTex counterpart. Standard ASCII
@@ -54,16 +54,16 @@ completeReturn _                  = True
 --   outputted MString
 toVideotex :: Char -> MString
 toVideotex c
-    | c == poundSign                       = [ss2, 0x23]
-    | c == degreeSign                      = [ss2, 0x30]
-    | c == plusMinusSign                   = [ss2, 0x31]
-    | c == leftwardsArrow                  = [ss2, 0x2C]
-    | c == upwardsArrow                    = [ss2, 0x2D]
-    | c == rightwardsArrow                 = [ss2, 0x2E]
-    | c == downwardsArrow                  = [ss2, 0x2F]
-    | c == vulgarFractionOneQuarter        = [ss2, 0x3C]
-    | c == vulgarFractionOneHalf           = [ss2, 0x3D]
-    | c == vulgarFractionThreeQuarters     = [ss2, 0x3E]
+    | c == poundSign                       = [eSS2, 0x23]
+    | c == degreeSign                      = [eSS2, 0x30]
+    | c == plusMinusSign                   = [eSS2, 0x31]
+    | c == leftwardsArrow                  = [eSS2, 0x2C]
+    | c == upwardsArrow                    = [eSS2, 0x2D]
+    | c == rightwardsArrow                 = [eSS2, 0x2E]
+    | c == downwardsArrow                  = [eSS2, 0x2F]
+    | c == vulgarFractionOneQuarter        = [eSS2, 0x3C]
+    | c == vulgarFractionOneHalf           = [eSS2, 0x3D]
+    | c == vulgarFractionThreeQuarters     = [eSS2, 0x3E]
     | c == latinSmallLetterCWithCedilla    = accCedilla     ++ [0x63]
     | c == rightSingleQuotationMark        = accCedilla     ++ [0x27]
     | c == latinSmallLetterAWithGrave      = accGrave       ++ [0x61]
@@ -86,10 +86,10 @@ toVideotex c
     | c == latinSmallLetterUWithAcute      = accAcute       ++ [0x75]
     | c == latinSmallLetterUWithCircumflex = accCirconflexe ++ [0x75]
     | c == latinSmallLetterUWithDiaeresis  = accUmlaut      ++ [0x75]
-    | c == latinCapitalLigatureOE          = [ss2, 0x6A]
-    | c == latinSmallLigatureOE            = [ss2, 0x7A]
-    | c == latinSmallLetterSharpS          = [ss2, 0x7B]
-    | c == greekSmallLetterBeta            = [ss2, 0x7B]
+    | c == latinCapitalLigatureOE          = [eSS2, 0x6A]
+    | c == latinSmallLigatureOE            = [eSS2, 0x7A]
+    | c == latinSmallLetterSharpS          = [eSS2, 0x7B]
+    | c == greekSmallLetterBeta            = [eSS2, 0x7B]
     | isAscii c                            = [(fromIntegral . ord) c]
     | otherwise                            = []
 

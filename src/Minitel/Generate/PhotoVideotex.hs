@@ -49,7 +49,7 @@ mPictureControlEntity l pid = mPictureCodingDelimiter
                            ++ mLengthIndicator l
 
 mPictureCodingDelimiter :: MString
-mPictureCodingDelimiter = [esc, 0x70]
+mPictureCodingDelimiter = [eESC, 0x70]
 
 mCodingMethodIdentifier :: PictureIdentifier -> MString
 mCodingMethodIdentifier pid = mPictureMode

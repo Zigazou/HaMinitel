@@ -13,11 +13,21 @@ module Minitel.Type.Ability where
 -- | Minitel ability describes what the Minitel is able to do, since the
 --   Minitel is a generic name for a complete family of terminals
 data Ability = Ability
-    { id         :: Char   -- ^ A Minitel is identified by a single letter
-    , name       :: String -- ^ Human french name
-    , reversible :: Bool   -- ^ Some Minitels can be used as a standard modem
-    , keyboard   :: String -- ^ First Minitels were ABCD, then Azerty or none
-    , maxSpeed   :: Int    -- ^ Max supported speed in bauds
-    , cols80     :: Bool   -- ^ Is terminal mode (80 columns) supported ?
-    , charDefine :: Bool   -- ^ are characters redefinable ?
+    { abilityId         :: Char   -- ^ A Minitel is identified by a single
+                                  --   letter
+    , abilityName       :: String -- ^ Human french name
+    , abilityReversible :: Bool   -- ^ Some Minitels can be used as a standard
+                                  --   modem
+    , abilityKeyboard   :: String -- ^ First Minitels were ABCD, then Azerty or
+                                  --   none
+    , abilityMaxSpeed   :: Int    -- ^ Max supported speed in bauds
+    , abilityCols80     :: Bool   -- ^ Is terminal mode (80 columns) supported ?
+    , abilityCharDefine :: Bool   -- ^ are characters redefinable ?
+    , abilityPhoto      :: Bool   -- ^ Is JPEG display supported ?
     } deriving (Show)
+
+data Maker = Maker
+    { makerId   :: Char    -- ^ A Maker is identified by a single letter
+    , makerName :: String  -- ^ Human french maker name
+    } deriving (Show)
+

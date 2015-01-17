@@ -36,8 +36,8 @@ charDesign design
 -- | Chooses which character set will be redefined. Useful only for the
 --   mRedesign function.
 mDefineSet :: CharSet -> MString
-mDefineSet G'0 = [us, 0x23, 0x20, 0x20, 0x20, 0x42, 0x49]
-mDefineSet G'1 = [us, 0x23, 0x20, 0x20, 0x20, 0x43, 0x49]
+mDefineSet G'0 = [aUS, 0x23, 0x20, 0x20, 0x20, 0x42, 0x49]
+mDefineSet G'1 = [aUS, 0x23, 0x20, 0x20, 0x20, 0x43, 0x49]
 mDefineSet _   = error "G0 or G1 charsets cannot be redefined"
 
 -- | Generate the MString used to redefine one character. Useful only for the
@@ -59,7 +59,7 @@ mDesigns = map mDesign
 mRedesign :: MNat -> [CharDesign] -> CharSet -> MString
 mRedesign fromChar designs charset =
     mDefineSet charset
-    ++ [us, 0x23, fromChar, 0x30]
+    ++ [aUS, 0x23, fromChar, 0x30]
     ++ (concat . mDesigns) designs
-    ++ [us, 0x41, 0x41]
+    ++ [aUS, 0x41, 0x41]
     ++ mUseSet charset
