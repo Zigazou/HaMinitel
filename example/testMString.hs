@@ -41,7 +41,7 @@ main = do
             , timeout     = 10
             }
 
-    m <- minitel "/dev/ttyUSB0" mySettings
+    m <- minitel "/dev/ttyUSB0" baseSettings
 
     mapM_ (mCall m) [ mExtendedKeyboard  True
                     , mCursorKeys        True
@@ -56,9 +56,19 @@ main = do
 
     m <<< mLocate 1 3
 
-    mCall m mIdentification >>= (m <<<) . mInfo . minitelInfo
+    info <- mCall m mIdentification
+    
+    print info
+    
+    ((m <<<) . mInfo . minitelInfo) info
 
     waitForMinitel m
+
+    m <<< [aUS, 0x20, 0x40]
+
+    tfi <- readNCount (getter m) 1024
+    
+    print tfi
 
     putStrLn "End!"
 

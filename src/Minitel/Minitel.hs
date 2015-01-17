@@ -120,7 +120,7 @@ readNMString getter' isComplete = readNMString' []
     where readNMString' s
             | isComplete s = return s
             | otherwise    = do
-                result <- waitFor 200000 getter'
+                result <- waitFor 500000 getter'
                 case result of
                     Just value -> readNMString' $ s ++ [value]
                     Nothing    -> return s

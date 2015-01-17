@@ -44,7 +44,7 @@ mDefineSet _   = error "G0 or G1 charsets cannot be redefined"
 --   mRedesign function
 mDesign :: CharDesign -> MString
 mDesign (MakeCharDesign design) =
-    map bitsToMtel ((chunksOf 6 . concat) design) ++ [0x30]
+    [0x30] ++ map bitsToMtel ((chunksOf 6 . concat) design)
     where bitsToNat = foldl (\a v -> 2 * a + (if v == '1' then 1 else 0)) 0
           bitsToMtel s = 0x40 + bitsToNat s * (if length s == 2 then 16 else 1)
 
@@ -59,7 +59,7 @@ mDesigns = map mDesign
 mRedesign :: MNat -> [CharDesign] -> CharSet -> MString
 mRedesign fromChar designs charset =
     mDefineSet charset
-    ++ [aUS, 0x23, fromChar, 0x30]
+    ++ [aUS, 0x23, fromChar]
     ++ (concat . mDesigns) designs
     ++ [aUS, 0x41, 0x41]
     ++ mUseSet charset
