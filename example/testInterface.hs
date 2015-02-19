@@ -1,29 +1,15 @@
 import Minitel.Minitel
-import Minitel.Generator
-import Minitel.Queue
-import Minitel.MString
+import Minitel.Generate.Generator
+import Minitel.Generate.Configuration
+import Minitel.Type.MString
+import Minitel.Type.Videotex
 
 import Minitel.UI.Widget
 import Minitel.UI.Interface
 import Minitel.UI.Dispatcher
-import Minitel.UI.Label
 import Minitel.UI.TextField
 
-import Control.Concurrent
-import Control.Monad
-import System.Hardware.Serialport
-
-import Data.Char
-
--- | Base attributes for widgets
-att = CommonAttributes
-    { mode       = VideoTex
-    , posX       = 1
-    , posY       = 1
-    , foreground = White
-    , background = Blue
-    }
-
+-- | Defines the background of our textual user interface
 back :: [MString]
 back =
     [ mVisibleCursor True
@@ -33,14 +19,14 @@ back =
     , mString        VideoTex "HaMinitel, Haskell’s Minitel library"
 
     , mLocate        1 2
-    , mSize          DoubleSize DoubleSize
+    , mSize          DoubleWidth DoubleHeight
     , mForeground    Green
     , mString        VideoTex "Interface demo"
 
     , mRectangle     2 4 36 15 Blue
 
     , mLocate        3 5
-    , mSize          DoubleSize SimpleSize
+    , mSize          DoubleWidth SimpleHeight
     , mString        VideoTex "Tell me about you"
 
     , mLocate        3 6
@@ -59,12 +45,21 @@ back =
     , mString        VideoTex "Age:"
     ]
 
+-- | Defines the interactive elements of our textual user interface
+focuss :: [IO TextField]
 focuss =
     [ newTextField att { posX = 17, posY = 8  } 15 ""
     , newTextField att { posX = 17, posY = 10 } 15 ""
     , newTextField att { posX = 17, posY = 12 } 3  ""
     ]
+    where att = CommonAttributes { mode       = VideoTex
+                                 , posX       = 1
+                                 , posY       = 1
+                                 , foreground = White
+                                 , background = Blue
+                                 }
 
+main :: IO ()
 main = do
     m <- minitel "/dev/ttyUSB0" baseSettings
 
@@ -75,9 +70,7 @@ main = do
           ]
 
     fss <- sequence focuss
-
-    let interface = newInterface back fss
-    interface <- runInterface m interface
+    _ <- runInterface m (newInterface back fss)
     
     waitForMinitel m
 

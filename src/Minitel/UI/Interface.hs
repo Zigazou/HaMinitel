@@ -36,7 +36,7 @@ newInterface back focusables' = Interface back focusables' (head focusables')
 -- | Return the element preceding a specified element inside a list
 elemBefore :: (Eq a) => a -> [a] -> Maybe a
 elemBefore _ []   = Nothing
-elemBefore _ (_:[]) = Nothing
+elemBefore _ [_]  = Nothing
 elemBefore widget (p:w:ws)
     | w == widget = Just p
     | otherwise   = elemBefore widget (w:ws)
@@ -44,7 +44,7 @@ elemBefore widget (p:w:ws)
 -- | Return the element following a specified element inside a list
 elemAfter :: (Eq a) => a -> [a] -> Maybe a
 elemAfter _ []   = Nothing
-elemAfter _ (_:[]) = Nothing
+elemAfter _ [_]  = Nothing
 elemAfter widget (w:n:ws)
     | w == widget = Just n
     | otherwise   = elemAfter widget (n:ws)

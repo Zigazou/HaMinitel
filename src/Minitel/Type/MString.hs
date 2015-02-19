@@ -9,12 +9,26 @@ Portability : POSIX
 
 MString Provides a structure holding a sequence of values for the Minitel.
 -}
-module Minitel.Type.MString where
+module Minitel.Type.MString
+( MString
+, MConfirmation
+, MCall
+, MMString
+, (+++)
+, showInt
+, completeReturn
+, toVideotex
+, toTerminal
+)
+where
 
-import           Data.Char
+import           Data.Char (ord, isAscii)
+import           Minitel.Type.MNatural (MNat, mnat)
+
 import           Minitel.Constants.Constants
-import           Minitel.Type.MNatural
 import           Minitel.Constants.MUnicode
+
+import           Control.Applicative (liftA2, (<|>))
 
 default (MNat)
 
@@ -31,6 +45,13 @@ type MConfirmation = (MString, MString)
 --   if everything went well
 type MCall         = (MString, MNat)
 
+-- | An MMString is a Maybe list of MString
+type MMString      = Maybe [MString]
+
+-- | Concatenates MMString
+(+++) :: Maybe [a] -> Maybe [a] -> Maybe [a]
+(+++) x y = liftA2 (++) x y <|> x <|> y
+
 -- | showInt will return an MString generated from an Int. For example, if it
 --   is called showInt 27, it will return [0x32, 0x37]
 showInt :: MNat -> MString
@@ -46,6 +67,11 @@ completeReturn [0x1b]             = False -- eESC
 completeReturn [0x1b, 0x5b]       = False -- eESC, eCSI
 completeReturn [0x1b, 0x5b, 0x32] = False -- eESC, eCSI, 0x32
 completeReturn [0x1b, 0x5b, 0x34] = False -- eESC, eCSI, 0x34
+completeReturn [0x19, 0x4b]       = False -- eSS2, 0x4b ; cedilla
+completeReturn [0x19, 0x41]       = False -- eSS2, 0x41 ; grave
+completeReturn [0x19, 0x42]       = False -- eSS2, 0x42 ; acute
+completeReturn [0x19, 0x43]       = False -- eSS2, 0x43 ; circonflex
+completeReturn [0x19, 0x48]       = False -- eSS2, 0x48 ; umlaut
 completeReturn _                  = True
 
 -- | Translates a unicode character to its VideoTex counterpart. Standard ASCII

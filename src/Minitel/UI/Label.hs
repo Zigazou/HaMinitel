@@ -11,11 +11,23 @@ Portability : POSIX
 This module provides a Label widget for the Minitel. A label is a simple widget
 displaying a line of text.
 -}
-module Minitel.UI.Label where
+module Minitel.UI.Label
+( Justification(JLeft, JCenter, JRight)
+, Label(Label)
+, width
+, value
+, justification
+, doDraw
+)
+where
 
-import Minitel.Type.MNatural
-import Minitel.Generate.Generator
+import Minitel.Type.MNatural (MNat)
+import Minitel.Type.MString (MMString)
+import Minitel.Generate.Generator (mLocate, mForeground, mBackground, mString)
 import Minitel.UI.Widget
+       ( Widget (common, draw)
+       , CommonAttributes (mode, posX, posY, foreground, background)
+       )
 
 data Justification = JLeft | JCenter | JRight
     deriving Eq

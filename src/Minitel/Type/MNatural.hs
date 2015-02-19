@@ -47,11 +47,11 @@ mnat = mnat' minBound maxBound
 -- | Converts an Int binary function returning Int to a MNatN binary function
 --   returning an MNatN
 mfnat :: (KnownNat lo, KnownNat hi) =>
-         (Int -> Int) -> (MNatN lo hi -> MNatN lo hi)
+         (Int -> Int) -> MNatN lo hi -> MNatN lo hi
 mfnat f = mnat . f . fromMNat
 
 mfnat2 :: (KnownNat lo, KnownNat hi) =>
-          (Int -> Int -> Int) -> (MNatN lo hi -> MNatN lo hi -> MNatN lo hi)
+          (Int -> Int -> Int) -> MNatN lo hi -> MNatN lo hi -> MNatN lo hi
 mfnat2 f x y = mnat $ f (fromMNat x) (fromMNat y)
 
 -- | You can do additions, substractions and multiplication with MNatN

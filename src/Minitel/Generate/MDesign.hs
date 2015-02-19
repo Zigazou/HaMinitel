@@ -29,9 +29,9 @@ data CharDesign = MakeCharDesign [String]
 
 charDesign :: [String] -> CharDesign
 charDesign design
-    | not (length design == 10) = error "Wrong number of strings"
-    | not (and $ map (\i -> length i == 8) design) = error "Wrong string size"
-    | otherwise = MakeCharDesign design
+    | length design /= 10               = error "Wrong number of strings"
+    | all (\ i -> length i == 8) design = error "Wrong string size"
+    | otherwise                         = MakeCharDesign design
 
 -- | Chooses which character set will be redefined. Useful only for the
 --   mRedesign function.
@@ -44,7 +44,7 @@ mDefineSet _   = error "G0 or G1 charsets cannot be redefined"
 --   mRedesign function
 mDesign :: CharDesign -> MString
 mDesign (MakeCharDesign design) =
-    [0x30] ++ map bitsToMtel ((chunksOf 6 . concat) design)
+    0x30 : map bitsToMtel ((chunksOf 6 . concat) design)
     where bitsToNat = foldl (\a v -> 2 * a + (if v == '1' then 1 else 0)) 0
           bitsToMtel s = 0x40 + bitsToNat s * (if length s == 2 then 16 else 1)
 

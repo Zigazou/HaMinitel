@@ -10,22 +10,21 @@ Portability : POSIX
 
 This module provides a base widget model for the Minitel.
 -}
-module Minitel.UI.Widget where
+module Minitel.UI.Widget
+( State(State)
+, CommonAttributes(CommonAttributes, mode, posX, posY, foreground, background)
+, Widget(common, draw)
+, Focusable(enter, leave, keypress)
+, WithState(state, withState)
+)
+where
 
 import Minitel.Type.MString
 import Minitel.Type.MNatural
 import Minitel.Type.Videotex
 import Minitel.Key
-import Control.Applicative
 
 import Control.Concurrent.MVar
-
--- | Widgets may return a list of MString when they receive signals or Nothing
-type MMString = Maybe [MString]
-
--- | Concatenate MMString
-(+++) :: Maybe [a] -> Maybe [a] -> Maybe [a]
-(+++) x y = liftA2 (++) x y <|> x <|> y
 
 -- | Widgets may have some state attached to them
 data State a = State a deriving Eq

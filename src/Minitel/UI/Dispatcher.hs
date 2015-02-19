@@ -11,7 +11,7 @@ Portability : POSIX
 This module provides a Dispatcher which will dispatch an event to a list of
 widget.
 -}
-module Minitel.UI.Dispatcher where
+module Minitel.UI.Dispatcher (runInterface) where
 
 import Minitel.Type.MString
 import Minitel.Minitel
@@ -24,10 +24,10 @@ runInterface :: (Focusable a) => Minitel -> Interface a -> IO (Interface a)
 runInterface minitel' interface@(Interface back focusables' current) = do
     -- | Draw the widgets (standards and focusables)
     minitel' <<< back
-    mapM_ ((<<<) minitel' =<<) $ map draw focusables'
+    mapM_ ((minitel' <<<) . draw) focusables'
  
     -- | Gives focus to the current widget (the first in the focusables list)
-    (<<<) minitel' =<< enter current
+    minitel' <<< enter current
 
     -- | Run the interface
     runInterface' minitel' interface
@@ -53,7 +53,7 @@ runInterface' minitel' intf@(Interface back focusables' current) = do
             _             -> (Just current, keypress current key)
 
     -- | Send the output to the Minitel
-    (<<<) minitel' =<< output'
+    minitel' <<< output'
 
     case nextWidget of
         -- | End the loop by returning the current Interface state

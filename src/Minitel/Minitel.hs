@@ -24,6 +24,7 @@ import           Control.Concurrent
 import           Control.Concurrent.STM
 
 import           Control.Monad
+import           Control.Applicative
 
 import           Data.Char
 
@@ -49,6 +50,9 @@ instance Sendable [MString] where
 instance Sendable (Maybe [MString]) where
     (<<<) minitel' (Just ms) = mapM_ (minitel' <<<) ms
     (<<<) _        Nothing   = return ()
+
+instance Sendable (IO (Maybe [MString])) where
+    (<<<) minitel' = ((<<<) minitel' =<<)
 
 instance Sendable Char where
     (<<<) minitel' c = putM (output minitel') [(mnat . ord) c]
@@ -103,9 +107,9 @@ readBMString :: (Eq a) => IO a -> ([a] -> Bool) -> IO [a]
 readBMString getter' isComplete = readBMString' []
     where readBMString' s
             | isComplete s = return s
-            | s == []      = getter' >>= \value -> readBMString' [value]
+            | null s       = getter' >>= \value -> readBMString' [value]
             | otherwise    = do
-                result <- waitFor 1000000 getter'
+                result <- waitFor 3000000 getter'
                 case result of
                     Just value -> readBMString' $ s ++ [value]
                     Nothing    -> return s
@@ -120,7 +124,7 @@ readNMString getter' isComplete = readNMString' []
     where readNMString' s
             | isComplete s = return s
             | otherwise    = do
-                result <- waitFor 500000 getter'
+                result <- waitFor 1000000 getter'
                 case result of
                     Just value -> readNMString' $ s ++ [value]
                     Nothing    -> return s
@@ -172,8 +176,7 @@ setSpeed m rate = do
     threadDelay 500000
     killMinitel m
     let settings = baseSettings { commSpeed = spBitRate rate }
-    m' <- minitel "" settings
-    return m'
+    minitel "" settings
 
     --answer <- mCall m $ mSpeed rate
     {-
@@ -194,14 +197,20 @@ waitForMinitel minitel' = do
     _ <- readBCount (getter minitel') (fromMNat count)
     return ()
 
+waitForConnection :: Minitel -> IO (Maybe MString)
+waitForConnection minitel' = do
+    firstByte <- waitFor 20000000 (getter minitel')
+    followingBytes <- readNCount (getter minitel') 100
+    return ((:) <$> firstByte <*> Just followingBytes)
+
 -- | Opens a full-duplex connection to a Minitel. The default serial is set
 --   to \/dev\/ttyUSB0.
 minitel :: String -> SerialPortSettings -> IO Minitel
 minitel "" settings = minitel "/dev/ttyUSB0" settings
 minitel dev settings = do
     port       <- openSerial dev settings
-    sendQueue  <- atomically $ newTQueue
-    recvQueue  <- atomically $ newTQueue
+    sendQueue  <- atomically newTQueue
+    recvQueue  <- atomically newTQueue
     sendThread <- forkIO $ sendLoop port sendQueue
     recvThread <- forkIO $ recvLoop port recvQueue
 

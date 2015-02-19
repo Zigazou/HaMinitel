@@ -13,9 +13,24 @@ input widget which can contain one line of user modifiable text.
 
 A text field is in fact a small window on a string value.
 -}
-module Minitel.UI.TextField where
+module Minitel.UI.TextField
+( TFState
+, insertChar
+, deleteChar
+, TextField
+, width
+, newTextField
+, doDraw
+, doEnter
+, doLeft
+, doRight
+, doCorrection
+, doChar
+)
+where
 
 import Minitel.Type.MNatural
+import Minitel.Type.MString (MMString)
 import Minitel.Generate.Generator
 import Minitel.Generate.Configuration
 import Minitel.Key
@@ -28,11 +43,11 @@ type TFState = State (String, Int)
 
 insertChar :: TFState -> Char -> TFState
 insertChar (State (str, pos)) c = State (insert str c pos, pos + 1)
-    where insert s c' p = (take p s) ++ [c'] ++ (drop p s)
+    where insert s c' p = take p s ++ [c'] ++ drop p s
 
 deleteChar :: TFState -> TFState
 deleteChar (State (str,pos)) = State (delete str pos, pos)
-    where delete s p = (take (p - 1) s) ++ (drop p s)
+    where delete s p = take (p - 1) s ++ drop p s
 
 -- | Pad a string into another string of a specified length.
 --
@@ -102,7 +117,7 @@ doDraw tf state'@(State (s, _)) =
 doEnter :: TextField -> TFState -> (TFState, MMString)
 doEnter tf state'@(State (_, pos)) =
     ( state'
-    , Just [ mLocate (fromIntegral ((posX c) + mnat pos)) (fromIntegral (posY c))
+    , Just [ mLocate (fromIntegral (posX c + mnat pos)) (fromIntegral (posY c))
            , mVisibleCursor True
            ]
     )
@@ -117,8 +132,8 @@ doLeft _ state'@(State (s, pos))
 -- | Move cursor to the right
 doRight :: TextField -> TFState -> (TFState, MMString)
 doRight _ state'@(State (s, pos))
-    | pos > (length s) = (state', Just [ mBeep ])
-    | otherwise        = (State (s, pos + 1), Just [ mMove 1 0 ])
+    | pos > length s = (state', Just [ mBeep ])
+    | otherwise      = (State (s, pos + 1), Just [ mMove 1 0 ])
 
 -- | Backspace key
 doCorrection :: TextField -> TFState -> (TFState, MMString)
