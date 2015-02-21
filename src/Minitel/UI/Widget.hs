@@ -19,15 +19,15 @@ module Minitel.UI.Widget
 )
 where
 
-import Minitel.Type.MString
-import Minitel.Type.MNatural
-import Minitel.Type.Videotex
-import Minitel.Key
+import Minitel.Type.MString (MMString)
+import Minitel.Type.MNatural (MNat)
+import Minitel.Type.Videotex (MMode, Color)
+import Minitel.Key (Key)
 
-import Control.Concurrent.MVar
+import Control.Concurrent.MVar (MVar)
 
 -- | Widgets may have some state attached to them
-data State a = State a deriving Eq
+data State a = State a deriving (Eq, Show)
 
 -- | Widgets all have common attributes
 data CommonAttributes = CommonAttributes

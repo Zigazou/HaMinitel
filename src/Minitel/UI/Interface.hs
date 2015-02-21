@@ -12,10 +12,20 @@ An Interface is a collection of widgets which keeps track of the current
 widget.
 -}
 
-module Minitel.UI.Interface where
+module Minitel.UI.Interface
+( Interface (Interface)
+, currentWidget
+, focusables
+, interface
+, elemBefore
+, elemAfter
+, nextFocusable
+, prevFocusable
+)
+where
 
-import Minitel.UI.Widget
-import Minitel.Type.MString
+import Minitel.UI.Widget (Focusable)
+import Minitel.Type.MString (MString)
 
 data Interface a where
     Interface :: Focusable a
@@ -30,8 +40,8 @@ currentWidget (Interface _ _ widget) = widget
 focusables :: Interface a -> [a]
 focusables (Interface _ fs _) = fs
 
-newInterface :: Focusable a => [MString] -> [a] -> Interface a
-newInterface back focusables' = Interface back focusables' (head focusables')
+interface :: Focusable a => [MString] -> [a] -> Interface a
+interface back focusables' = Interface back focusables' (head focusables')
 
 -- | Return the element preceding a specified element inside a list
 elemBefore :: (Eq a) => a -> [a] -> Maybe a

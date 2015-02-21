@@ -12,10 +12,21 @@ This module allows to send photo videotex.
 module Minitel.Generate.PhotoVideotex ( mJPEG ) where
 
 import           Minitel.Constants.Constants
-import           Minitel.Type.MNatural
-import           Minitel.Type.MString
-import           Minitel.Type.MLargeNumber
+import           Minitel.Type.MNatural (mnat)
+import           Minitel.Type.MString (MString)
+import           Minitel.Type.MLargeNumber (showLargeNumber)
 import           Minitel.Generate.Photo.Parameter
+                 ( mResetToDefault
+                 , mSourceComponentDescription
+                 , Component (ComponentY)
+                 , mPhotoAreaLocation
+                 , mPhotoAreaSize
+                 , mPicturePlacement
+                 , mSourceComponentDescription
+                 , mPhotoAreaLocation
+                 , mPhotoAreaSize
+                 , mPicturePlacement
+                 )
 import           Control.Applicative ((<$>))
 import qualified Data.ByteString.Lazy as BS
 import qualified Data.ByteString as SBS

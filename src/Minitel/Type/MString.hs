@@ -22,13 +22,13 @@ module Minitel.Type.MString
 )
 where
 
-import           Data.Char (ord, isAscii)
-import           Minitel.Type.MNatural (MNat, mnat)
+import Data.Char (ord, isAscii)
+import Minitel.Type.MNatural (MNat, mnat)
 
-import           Minitel.Constants.Constants
-import           Minitel.Constants.MUnicode
+import Minitel.Constants.Constants
+import Minitel.Constants.MUnicode
 
-import           Control.Applicative (liftA2, (<|>))
+import Control.Applicative ((<|>), (<$>), (<*>))
 
 default (MNat)
 
@@ -50,7 +50,7 @@ type MMString      = Maybe [MString]
 
 -- | Concatenates MMString
 (+++) :: Maybe [a] -> Maybe [a] -> Maybe [a]
-(+++) x y = liftA2 (++) x y <|> x <|> y
+(+++) x y = (++) <$> x <*> y <|> x <|> y
 
 -- | showInt will return an MString generated from an Int. For example, if it
 --   is called showInt 27, it will return [0x32, 0x37]

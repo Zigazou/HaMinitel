@@ -21,17 +21,18 @@ module Minitel.Generate.Configuration
 , mVisibleCursor
 , mEchoing
 , mSpeed
-) where
+, mRollMode
+)
+where
 
-import           Minitel.Constants.Constants
-import           Minitel.Type.MNatural
-import           Minitel.Type.MString
-import           Minitel.Type.Videotex
-import           Minitel.Type.Ability
-import           Minitel.Constants.Abilities
-import           Data.Char
-
-import           Data.List
+import Minitel.Constants.Constants
+import Minitel.Type.MNatural (MNat, fromMNat)
+import Minitel.Type.MString (MString, MConfirmation, MCall)
+import Minitel.Type.Videotex (MMode (Terminal, VideoTex, Mixed))
+import Minitel.Type.Ability (Ability (abilityId), Maker (makerId))
+import Minitel.Constants.Abilities (minitelAbilities, makers)
+import Data.Char (chr)
+import Data.List (find)
 
 default (MNat)
 
@@ -85,6 +86,14 @@ mCursorKeys False = (sPRO3 ++ [stop , recvKeyboard, c0], pro3Length)
 mLowercaseKeyboard :: Bool -> MCall
 mLowercaseKeyboard True  = (sPRO2 ++ [start, lowercase], pro2Length)
 mLowercaseKeyboard False = (sPRO2 ++ [stop , lowercase], pro2Length)
+
+-- | Enable or disable roll mode. By default, the roll mode is disabled
+--   When disabled, if the user tries to write past the bottom right character,
+--   it will start to write from the top left character. When enabled, it acts
+--   like a standard terminal.
+mRollMode :: Bool -> MCall
+mRollMode True  = (sPRO2 ++ [start, rollMode], pro2Length)
+mRollMode False = (sPRO2 ++ [stop , rollMode], pro2Length)
 
 -- | Display or hide the cursor. Hidden by default.
 mVisibleCursor :: Bool -> MString

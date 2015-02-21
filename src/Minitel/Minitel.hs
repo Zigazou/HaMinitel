@@ -10,23 +10,74 @@ Portability : POSIX
 
 This module provides to deal with Minitel communications.
 -}
-module Minitel.Minitel where
+module Minitel.Minitel
+( Sendable((<<<))
+, Minitel(serial, input, output, receiver, sender)
+, mConfirmation
+, mCall
+, readBCount
+, readNCount
+, getter
+, readBMString
+, readNMString
+, waitFor
+, baseSettings
+, spBitRate
+, setSpeed
+, waitForMinitel
+, waitForConnection
+, minitel
+, killMinitel
+)
+where
 
-import           Minitel.Generate.Configuration
-import           Minitel.Type.MNatural
+import           Minitel.Generate.Configuration (mSpeed, mIdentification)
+import           Minitel.Type.MNatural (MNat, mnat, fromMNat)
 import           Minitel.Type.MString
-import           Minitel.Type.Queue
+                 ( MString
+                 , MMString
+                 , MCall
+                 , MConfirmation
+                 , completeReturn
+                 )
+import           Minitel.Type.Queue (Queue, get, put, putM)
 
 import qualified Data.ByteString               as B
 import           System.Hardware.Serialport
+                 ( SerialPort(SerialPort)
+                 , SerialPortSettings
+                    ( SerialPortSettings
+                    , commSpeed
+                    , bitsPerWord
+                    , stopb
+                    , parity
+                    , flowControl
+                    , timeout
+                    )
+                 , CommSpeed(CommSpeed, CS300, CS1200, CS4800, CS9600)
+                 , StopBits(One)
+                 , Parity(Even)
+                 , FlowControl(NoFlowControl)
+                 , openSerial
+                 , send
+                 , recv
+                 )
 
 import           Control.Concurrent
-import           Control.Concurrent.STM
+                 ( killThread
+                 , threadDelay
+                 , forkIO
+                 , ThreadId
+                 , newEmptyMVar
+                 , putMVar
+                 , takeMVar
+                 )
+import           Control.Concurrent.STM (atomically, newTQueue)
 
-import           Control.Monad
-import           Control.Applicative
+import           Control.Monad (forever, when)
+import           Control.Applicative ((<$>), (<*>))
 
-import           Data.Char
+import           Data.Char (ord)
 
 class Sendable a where
     (<<<) :: Minitel -> a -> IO ()
@@ -51,8 +102,11 @@ instance Sendable (Maybe [MString]) where
     (<<<) minitel' (Just ms) = mapM_ (minitel' <<<) ms
     (<<<) _        Nothing   = return ()
 
-instance Sendable (IO (Maybe [MString])) where
+instance Sendable (IO MMString) where
     (<<<) minitel' = ((<<<) minitel' =<<)
+
+instance Sendable [IO MMString] where
+    (<<<) minitel' = mapM_ (minitel' <<<)
 
 instance Sendable Char where
     (<<<) minitel' c = putM (output minitel') [(mnat . ord) c]
@@ -69,7 +123,7 @@ instance Sendable [MCall] where
 --   False
 mConfirmation :: Minitel -> MConfirmation -> IO Bool
 mConfirmation minitel' (mSend, mReceive) = do
-    putM (output minitel') mSend
+    minitel' <<< mSend
     answer <- readNMString (getter minitel') completeReturn
     return (answer == mReceive)
 
@@ -77,26 +131,24 @@ mConfirmation minitel' (mSend, mReceive) = do
 --   an MString of max length as specified in the MCall.
 mCall :: Minitel -> MCall -> IO MString
 mCall minitel' (mSend, count) = do
-    putM (output minitel') mSend
-    return =<< readNCount (getter minitel') (fromMNat count)
+    minitel' <<< mSend
+    readNCount (getter minitel') (fromMNat count)
 
 -- | Waits for an MString of @count@ elements coming from the Minitel. If it
 --   takes too long, returns what has already been collected.
 --   This is the blocking version.
 readBCount :: (Eq a) => IO a -> Int -> IO [a]
-readBCount getter' count = readBMString getter' isComplete
-    where isComplete sequ = length sequ == count
+readBCount getter' count = readBMString getter' (\sequ -> length sequ == count)
 
 -- | Waits for an MString of @count@ elements coming from the Minitel. If it
 --   takes too long, returns what has already been collected.
 --   This is the non-blocking version
 readNCount :: (Eq a) => IO a -> Int -> IO [a]
-readNCount getter' count = readNMString getter' isComplete
-    where isComplete sequ = length sequ == count
+readNCount getter' count = readNMString getter' (\sequ -> length sequ == count)
 
 -- | Returns the getter for a Minitel
 getter :: Minitel -> IO MNat
-getter minitel' = get $ input minitel'
+getter = get . input
 
 -- | Waits for a complete MString coming from the Minitel. If it takes too
 --   long, returns what has already been collected. To determine if the MString
@@ -137,8 +189,8 @@ waitFor delay getter' = do
     done <- newEmptyMVar
 
     -- Run a race between the reader and the waiter
-    reader <- forkIO $ getter'           >>= \c -> putMVar done $ Just c
-    waiter <- forkIO $ threadDelay delay >>        putMVar done Nothing
+    reader <- forkIO $ getter'           >>= putMVar done . Just
+    waiter <- forkIO $ threadDelay delay >>  putMVar done Nothing
 
     -- Wait for the first to win
     result <- takeMVar done
@@ -178,23 +230,13 @@ setSpeed m rate = do
     let settings = baseSettings { commSpeed = spBitRate rate }
     minitel "" settings
 
-    --answer <- mCall m $ mSpeed rate
-    {-
-    if length answer == pro2Length
-        then return m
-        else do
-            killMinitel m
-            let settings = baseSettings { commSpeed = spBitRate rate }
-            m <- minitel "" settings
-            return m
-    -}
-
 -- | waitForMinitel waits till the Minitel has displayed everything
 waitForMinitel :: Minitel -> IO ()
 waitForMinitel minitel' = do
     let (mSend, count) = mIdentification
-    putM (output minitel') mSend
-    _ <- readBCount (getter minitel') (fromMNat count)
+    minitel' <<< mSend
+    x <- readBCount (getter minitel') (fromMNat count)
+    print x
     return ()
 
 waitForConnection :: Minitel -> IO (Maybe MString)

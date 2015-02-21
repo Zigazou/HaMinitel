@@ -15,7 +15,7 @@ module Minitel.Constants.Abilities
 , makerUnknown
 ) where
 
-import           Minitel.Type.Ability
+import Minitel.Type.Ability (Ability (Ability), Maker (Maker))
 
 -- | A list of known Minitels and their abilities
 minitelAbilities :: [Ability]

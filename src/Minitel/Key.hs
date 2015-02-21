@@ -9,12 +9,23 @@ Portability : POSIX
 
 This module provides an abstraction to the Minitel keys.
 -}
-module Minitel.Key where
+module Minitel.Key
+( Modifier(Plain, Shift, Ctrl, CtrlShift)
+, Key( KeyAlpha, KeyTOC, KeyCancel, KeyPrev, KeyRepeat, KeyGuide, KeyCorrection
+     , KeyNext, KeySend, KeyConnection, KeyReturn, KeyEsc, KeyLeft, KeyRight
+     , KeyUp, KeyDown, KeyCedilla, KeyGrave, KeyAcute, KeyCircumflex
+     , KeyDiaeresis
+     )
+, toAlpha
+, toKey
+)
+where
 
 import Minitel.Constants.Constants
-import Minitel.Type.MString
-import Data.Char
+import Minitel.Type.MString (MString)
+import Data.Char (chr)
 import Data.Maybe (isJust, fromJust)
+import Data.List (isPrefixOf)
 
 -- | Every possible character of the Minitel
 minitelChars :: String
@@ -26,7 +37,7 @@ isMinitelChar :: Char -> Bool
 isMinitelChar c = c `elem` minitelChars
 
 -- | The Minitel has 3 type of modifier : Shift, Ctrl or Ctrl+Shift
-data Modifier = Plain | Shift | Ctrl | CtrlShift
+data Modifier = Plain | Shift | Ctrl | CtrlShift deriving (Eq, Show)
 
 -- | Every possible key on the Minitel keyboard (visible + functions)
 data Key = KeyAlpha      Char
@@ -50,11 +61,13 @@ data Key = KeyAlpha      Char
          | KeyAcute      Modifier
          | KeyCircumflex Modifier
          | KeyDiaeresis  Modifier
+         deriving (Eq, Show)
 
 -- | Converts a key sequence to a Unicode character
 toAlpha :: MString -> Maybe Char
+toAlpha [] = Nothing
 toAlpha s
-    | isMinitelChar c               = Just c
+    | isMinitelChar fstC            = Just fstC
     | s == accCedilla     ++ [0x63] = Just 'ç'
     | s == accCedilla     ++ [0x27] = Just 'Ç'
     | s == accGrave       ++ [0x61] = Just 'à'
@@ -71,11 +84,18 @@ toAlpha s
     | s == accGrave       ++ [0x75] = Just 'ù'
     | s == accCirconflexe ++ [0x75] = Just 'û'
     | s == accUmlaut      ++ [0x75] = Just 'ü'
+    | accCedilla     `isPrefixOf` s = Just lstC
+    | accGrave       `isPrefixOf` s = Just lstC
+    | accCirconflexe `isPrefixOf` s = Just lstC
+    | accUmlaut      `isPrefixOf` s = Just lstC
+    | accAcute       `isPrefixOf` s = Just lstC
     | otherwise                     = Nothing
-    where c = (chr . fromIntegral . head) s
+    where fstC = (chr . fromIntegral . head) s
+          lstC = (chr . fromIntegral . last) s
 
 -- | Converts an MString to a key
 toKey :: MString -> Key
+toKey [] = error "No key"
 toKey s
     | isJust alpha           = KeyAlpha (fromJust alpha)
     | s == keyUp             = KeyUp Plain

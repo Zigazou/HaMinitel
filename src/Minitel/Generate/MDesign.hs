@@ -13,12 +13,12 @@ module Minitel.Generate.MDesign (
     CharDesign, charDesign, mDefineSet, mDesign, mRedesign
 ) where
 
-import           Data.List.Split   (chunksOf)
-import           Minitel.Constants.Constants
-import           Minitel.Type.MNatural
-import           Minitel.Type.MString
-import           Minitel.Type.Videotex
-import           Minitel.Generate.Generator
+import Data.List.Split (chunksOf)
+import Minitel.Constants.Constants
+import Minitel.Type.MNatural (MNat)
+import Minitel.Type.MString (MString)
+import Minitel.Type.Videotex (CharSet (G'0, G'1)) 
+import Minitel.Generate.Generator (mUseSet)
 
 default (MNat)
 

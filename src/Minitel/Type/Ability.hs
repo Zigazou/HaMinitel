@@ -8,7 +8,13 @@ Stability   : experimental
 Portability : POSIX
 
 -}
-module Minitel.Type.Ability where
+module Minitel.Type.Ability
+( Ability ( Ability, abilityId, abilityName, abilityReversible, abilityKeyboard
+          , abilityMaxSpeed, abilityCols80, abilityCharDefine, abilityPhoto
+          )
+, Maker (Maker, makerId, makerName)
+)
+where
 
 -- | Minitel ability describes what the Minitel is able to do, since the
 --   Minitel is a generic name for a complete family of terminals

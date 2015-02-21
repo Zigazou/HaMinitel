@@ -8,9 +8,24 @@ Stability   : experimental
 Portability : POSIX
 
 -}
-module Minitel.Type.Videotex where
+module Minitel.Type.Videotex
+( MColor
+, ToMColor (toMColor)
+, Color (Black, Red, Green, Yellow, Blue, Magenta, Cyan, White)
+, Grey  (Grey0, Grey1, Grey2, Grey3, Grey4, Grey5, Grey6, Grey7)
+, WhatToRemove (Column, Row)
+, WhatToInsert
+, CharSet (G0, G1, G'0, G'1)
+, CharWidth (SimpleWidth, DoubleWidth)
+, CharHeight (SimpleHeight, DoubleHeight)
+, WhatToClear (Everything, EndOfLine, EndOfScreen, StartOfScreen
+              , StartOfLine, Line, StatusLine, ReallyEverything
+              )
+, MMode (VideoTex, Mixed, Terminal)
+)
+where
 
-import Minitel.Type.MNatural
+import Minitel.Type.MNatural (MNat)
 
 default (MNat)
 

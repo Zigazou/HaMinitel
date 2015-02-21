@@ -15,36 +15,61 @@ A text field is in fact a small window on a string value.
 -}
 module Minitel.UI.TextField
 ( TFState
+, textBuffer
+, cursorPosition
 , insertChar
 , deleteChar
+, getValue
 , TextField
+, textField
 , width
-, newTextField
 , doDraw
 , doEnter
 , doLeft
 , doRight
 , doCorrection
 , doChar
+, getString
+, getCursorPosition
 )
 where
 
-import Minitel.Type.MNatural
+import Minitel.Type.MNatural (MNat, mnat)
 import Minitel.Type.MString (MMString)
 import Minitel.Generate.Generator
 import Minitel.Generate.Configuration
 import Minitel.Key
 import Minitel.UI.Widget
+       ( State (State)
+       , Widget (draw, common)
+       , Focusable (leave, keypress, enter)
+       , CommonAttributes ( posX, posY, mode, foreground, background )
+       , WithState (withState, state)
+       )
 
-import Control.Concurrent.MVar
+import Control.Concurrent.MVar (MVar, newMVar, readMVar, modifyMVar)
 
--- | TFState holds a text buffer for the text field widget
+import Control.Applicative (liftA)
+
+-- | TFState holds a text buffer for the text field widget.
+--   First value is the buffer content
+--   Second value is the current cursor position
 type TFState = State (String, Int)
 
+-- | Returns the string of the state
+textBuffer :: TFState -> String
+textBuffer (State (s, _)) = s
+
+-- | Returns the cursor position of the state
+cursorPosition :: TFState -> Int
+cursorPosition (State (_, c)) = c
+
+-- | Insert a character at a specific location in the string
 insertChar :: TFState -> Char -> TFState
 insertChar (State (str, pos)) c = State (insert str c pos, pos + 1)
     where insert s c' p = take p s ++ [c'] ++ drop p s
 
+-- | Delete a character at a specific location in the string
 deleteChar :: TFState -> TFState
 deleteChar (State (str,pos)) = State (delete str pos, pos)
     where delete s p = take (p - 1) s ++ drop p s
@@ -68,13 +93,25 @@ width :: TextField -> MNat
 width (TextField _ _ w) = w
 
 -- | Construct a new TextField given common attributes, width, initial value.
-newTextField :: CommonAttributes -- ^ Common attributes (x, y, colors etc.)
-             -> MNat             -- ^ Visible width
-             -> String           -- ^ Initial value
-             -> IO TextField
-newTextField common' w init' = do
+textField :: CommonAttributes -- ^ Common attributes (x, y, colors etc.)
+          -> MNat             -- ^ Visible width
+          -> String           -- ^ Initial value
+          -> IO TextField
+textField common' w init' = do
     mvState <- newMVar $ State (init', 0)
     return $ TextField common' mvState w
+
+-- | Get value of the textfield
+getValue :: TextField -> IO TFState
+getValue = readMVar . state
+
+-- | Get text of the textfield
+getString :: TextField -> IO String
+getString = liftA textBuffer . getValue
+
+-- | Get cursor position of the textfield
+getCursorPosition :: TextField -> IO Int
+getCursorPosition = liftA cursorPosition . getValue
 
 -- | A TextField has a state
 instance WithState TextField TFState where
@@ -116,12 +153,9 @@ doDraw tf state'@(State (s, _)) =
 -- | The TextField receives focus
 doEnter :: TextField -> TFState -> (TFState, MMString)
 doEnter tf state'@(State (_, pos)) =
-    ( state'
-    , Just [ mLocate (fromIntegral (posX c + mnat pos)) (fromIntegral (posY c))
-           , mVisibleCursor True
-           ]
-    )
+    ( state', Just [ mLocate x y, mVisibleCursor True] )
     where c = common tf
+          (x, y) = (fromIntegral (posX c + mnat pos), fromIntegral (posY c))
 
 -- | Move cursor to the left
 doLeft :: TextField -> TFState -> (TFState, MMString)

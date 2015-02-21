@@ -11,8 +11,8 @@ Provides a shared queue for dealing with a Minitel
 -}
 module Minitel.Type.Queue (Queue, get, put, putM) where
 
-import           Minitel.Type.MNatural
-import           Minitel.Type.MString
+import           Minitel.Type.MNatural         (MNat)
+import           Minitel.Type.MString          (MString)
 
 import           Control.Concurrent.STM        (atomically)
 import           Control.Concurrent.STM.TQueue (TQueue, readTQueue, writeTQueue)

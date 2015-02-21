@@ -11,12 +11,45 @@ This module provides functions generating MString for the Minitel. It allows
 you to generate special commands for the Minitel like clearing screen, cursor
 position etc. without remembering the codes.
 -}
-module Minitel.Generate.Generator where
+module Minitel.Generate.Generator
+( mString
+, mForeground
+, mBackground
+, mLocate
+, mMove
+, mGotoStartOfLine
+, mSize
+, mUnderscore
+, mBlink
+, mReverse
+, mClear
+, mRepeat
+, mBeep
+, mRemove
+, mInsert
+, mSemigraphic
+, mUseSet
+, mRectangle
+)
+where
 
-import           Minitel.Constants.Constants
-import           Minitel.Type.MNatural
-import           Minitel.Type.MString
-import           Minitel.Type.Videotex
+import Minitel.Constants.Constants
+import Minitel.Type.MNatural (MNat, mnat, fromMNat)
+import Minitel.Type.MString (MString, showInt, toVideotex, toTerminal)
+import Minitel.Type.Videotex
+       ( MMode (VideoTex)
+       , ToMColor
+       , toMColor
+       , CharWidth (SimpleWidth, DoubleWidth)
+       , CharHeight (SimpleHeight, DoubleHeight)
+       , WhatToClear ( Everything, EndOfLine, EndOfScreen, StartOfScreen
+                     , StartOfLine, Line, StatusLine, EndOfLine
+                     , ReallyEverything
+                     )
+       , WhatToRemove (Column, Row)
+       , WhatToInsert
+       , CharSet (G0, G1, G'0, G'1)
+       )
 
 default (MNat)
 
@@ -142,6 +175,6 @@ mUseSet G'1 = sG'1G1
 mRectangle :: ToMColor a => MNat -> MNat -> MNat -> MNat -> a -> MString
 mRectangle x y w h color = concat . concat $ map mLine [y .. (y + h - 1)]
     where mLine y' = [ mLocate x y'
-                    , mBackground color
-                    , mRepeat w 0x20
-                    ]
+                     , mBackground color
+                     , mRepeat w 0x20
+                     ]

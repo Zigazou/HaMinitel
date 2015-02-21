@@ -10,7 +10,7 @@ import System.Hardware.Serialport
 import Data.Char
 
 haskellMinitel :: Minitel -> IO ()
-haskellMinitel m = forM_ [2,4 .. 20] $ \ x -> do
+haskellMinitel m = forM_ [2,4 .. 20] $ \ x ->
     m <<< [ mLocate (x - 1) x
           , mSize SimpleSize DoubleSize
           , mString VideoTex "Haskell Minitel!"
@@ -33,6 +33,6 @@ main = do
 
     forever $ do
         s <- readMString (get $ input m) completeReturn
-        putStrLn $ show s
+        print s
 
     flush (serial m)

@@ -9,10 +9,10 @@ Portability : POSIX
 
 MLargeNumber handles coding of large numbers for the Minitel.
 -}
-module Minitel.Type.MLargeNumber where
+module Minitel.Type.MLargeNumber (showLargeNumber) where
 
-import           Minitel.Type.MNatural
-import           Minitel.Type.MString
+import Minitel.Type.MNatural (mnat)
+import Minitel.Type.MString (MString)
 
 -- | showInt will return an MString generated from an Int. For example, if it
 --   is called showLargeNumber 27, it will return [0x32, 0x37]

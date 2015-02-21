@@ -18,8 +18,8 @@ they were standard Int while ensuring that we use only 7 bits.
 
 module Minitel.Type.MNatural (MNat, MNatN, mnat, fromMNat) where
 
-import GHC.TypeLits
-import Data.Proxy
+import GHC.TypeLits (KnownNat, Nat, natVal)
+import Data.Proxy (Proxy (Proxy))
 
 -- | The MNatN type. The constructor is hidden.
 newtype MNatN (lo :: Nat) (hi :: Nat) = MakeMNat Int
@@ -73,3 +73,4 @@ instance (KnownNat lo, KnownNat hi) => Integral (MNatN lo hi) where
 instance (KnownNat lo, KnownNat hi) => Enum (MNatN lo hi) where
     toEnum      = mnat
     fromEnum    = fromMNat
+

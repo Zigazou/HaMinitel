@@ -13,7 +13,7 @@ is in french).
 -}
 module Minitel.Constants.Constants where
 
-import           Minitel.Type.MNatural
+import Minitel.Type.MNatural (MNat)
 
 -- No need for Integer default values, they are overkill for the Minitel
 default (MNat)
