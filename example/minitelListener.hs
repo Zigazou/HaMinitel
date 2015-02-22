@@ -43,7 +43,10 @@ controls =
     , "CAN", "EM ", "SUB", "ESC", "FS ", "GS ", "RS ", "US "
     ]
 
--- | Show user friendly version of an MNat value.
+-- | Show user friendly version of an MNat value. The output is padded on 8
+--   character wide, making it suitable to display sequentially on the Minitel
+--   screen (40 characters wide) or the computer screen (generally 80 characters
+--   wide).
 friendly :: MNat -> String
 friendly mn
     | mn < 0x20 = printf " %s-%02x "   (controls !! mni) mni
@@ -53,11 +56,20 @@ friendly mn
 -- | The endless Minitel listener
 listen :: Minitel -> IO ()
 listen m = do
+    -- Read exactly one byte from the Minitel (blocking read)
     byte <- readBCount (getter m) 1
+
+    -- Get a human friendly view of the value
     let human = (friendly . head) byte
+
+    -- Display it on the computer screen
     putStr human
     hFlush stdout
+
+    -- Display it on the Minitel
     m <<< mString VideoTex human
+
+    -- Do the same for the following bytes
     listen m
 
 -- | Explanations about this program
@@ -75,7 +87,7 @@ message =
     , mForeground Green
     , mString     VideoTex "Minitel listener"
 
-    -- Form background
+    -- How this program works
     , mLocate     1 3
     , mForeground Yellow
     , mString     VideoTex "Type any key to see which codes the", crlf

@@ -202,6 +202,8 @@ mixed2         = [0x32, 0x7e]
 rollMode       = 0x43
 procedure      = 0x44
 lowercase      = 0x45
+zoomUpper      = 0x46
+zoomLower      = 0x47
 
 -- * PRO2+PROG codes
 b9600          = 0x7f -- 9600 baud

@@ -41,13 +41,14 @@ main = do
             , timeout     = 10
             }
 
-    -- m <- minitel "/dev/ttyUSB0" baseSettings
+    m <- minitel "/dev/ttyUSB0" baseSettings
+    {-
     m <- minitel "/dev/ttyS0" baseSettings
 
     m <<< mString VideoTex "ATA\r"
 
     _ <- waitForConnection m
-
+    -}
     {-
     mapM_ (mCall m) [ mExtendedKeyboard  True
                     , mCursorKeys        True
@@ -70,34 +71,7 @@ main = do
 
     waitForMinitel m
 
-    _ <- waitFor 5000000 (getter m)
-
-    m <<<   [ mClear      ReallyEverything
-            , mLocate     1 0
-            , mString     VideoTex "Table of contents"
-            , mLocate     1 2
-            , mSize       DoubleWidth DoubleHeight
-            , mForeground Green
-            , mString     VideoTex "Haskell minitel"
-            , mRectangle  2 4 36 15 Blue
-            , mLocate     3 6
-            , mForeground Yellow
-            , mSize       SimpleWidth DoubleHeight
-            , mString     VideoTex " 1- What is HaMinitel ?"
-            , mLocate     3 9
-            , mForeground Yellow
-            , mSize       SimpleWidth DoubleHeight
-            , mString     VideoTex " 2- How does it work ?"
-            , mBeep
-            ]    
-
     waitForMinitel m
-    {-
-    m <<< [aUS, 0x20, 0x40]
 
-    tfi <- readNCount (getter m) 1024
-    
-    print tfi
-    -}
     putStrLn "End!"
 

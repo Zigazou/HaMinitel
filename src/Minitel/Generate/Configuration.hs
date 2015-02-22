@@ -22,6 +22,8 @@ module Minitel.Generate.Configuration
 , mEchoing
 , mSpeed
 , mRollMode
+, mZoomUpper
+, mZoomLower
 )
 where
 
@@ -81,19 +83,32 @@ mCursorKeys :: Bool -> MCall
 mCursorKeys True  = (sPRO3 ++ [start, recvKeyboard, c0], pro3Length)
 mCursorKeys False = (sPRO3 ++ [stop , recvKeyboard, c0], pro3Length)
 
+-- | Enable or disable a functionality using PRO2 protocol.
+mPRO2Toggle :: MNat -> Bool -> MCall
+mPRO2Toggle mn True  = (sPRO2 ++ [start, mn], pro2Length)
+mPRO2Toggle mn False = (sPRO2 ++ [stop , mn], pro2Length)
+
 -- | Enable or disable caps lock mode. By default, the Minitel is in caps lock
 --   mode.
 mLowercaseKeyboard :: Bool -> MCall
-mLowercaseKeyboard True  = (sPRO2 ++ [start, lowercase], pro2Length)
-mLowercaseKeyboard False = (sPRO2 ++ [stop , lowercase], pro2Length)
+mLowercaseKeyboard = mPRO2Toggle lowercase
 
 -- | Enable or disable roll mode. By default, the roll mode is disabled
 --   When disabled, if the user tries to write past the bottom right character,
 --   it will start to write from the top left character. When enabled, it acts
 --   like a standard terminal.
 mRollMode :: Bool -> MCall
-mRollMode True  = (sPRO2 ++ [start, rollMode], pro2Length)
-mRollMode False = (sPRO2 ++ [stop , rollMode], pro2Length)
+mRollMode = mPRO2Toggle rollMode
+
+-- | Enable or disable zoom on the upper part of the Minitel (available only on
+--   Minitel 1, not 1B etc.)
+mZoomUpper :: Bool -> MCall
+mZoomUpper = mPRO2Toggle zoomUpper
+
+-- | Enable or disable zoom on the lower part of the Minitel (available only on
+--   Minitel 1, not 1B etc.)
+mZoomLower :: Bool -> MCall
+mZoomLower = mPRO2Toggle zoomLower
 
 -- | Display or hide the cursor. Hidden by default.
 mVisibleCursor :: Bool -> MString
