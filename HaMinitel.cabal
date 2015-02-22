@@ -50,6 +50,7 @@ library
                      Minitel.Constants.PSCFS
                      Minitel.Constants.Accents
                      Minitel.Constants.Protocol
+                     Minitel.Constants.Keyboard
                      Minitel.Constants.CSI
                      Minitel.Constants.Photo
                      Minitel.Constants.MUnicode

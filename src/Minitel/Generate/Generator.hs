@@ -158,7 +158,8 @@ mRemove Row    count = CSIx $ showInt count ++ [0x4d]
 --   on the right. When inserting a row, characters below it are moved
 --   downward.
 mInsert :: WhatToInsert -> MNat -> MString
-mInsert Column count = CSI2 0x34 0x68 ++ replicate (fromMNat count) ASCII.Space
+mInsert Column count = CSI2 0x34 0x68
+                    ++ replicate (fromMNat count) ASCII.Space
                     ++ CSI2 0x34 0x6c
 mInsert Row    count = CSIx $ showInt count ++ [0x4c]
 
