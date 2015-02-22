@@ -1,3 +1,4 @@
+{-# LANGUAGE PatternSynonyms #-}
 {-|
 Module      : Key
 Description : Abstraction of the Minitel keys
@@ -21,11 +22,12 @@ module Minitel.Key
 )
 where
 
-import Minitel.Constants.Constants
+import Minitel.Constants.Accents
+import qualified Minitel.Constants.Keyboard as Key
+import qualified Minitel.Constants.ASCII    as ASCII
+import Minitel.Type.MNatural (chrm)
 import Minitel.Type.MString (MString)
-import Data.Char (chr)
 import Data.Maybe (isJust, fromJust)
-import Data.List (isPrefixOf)
 
 -- | Every possible character of the Minitel
 minitelChars :: String
@@ -66,64 +68,63 @@ data Key = KeyAlpha      Char
 -- | Converts a key sequence to a Unicode character
 toAlpha :: MString -> Maybe Char
 toAlpha [] = Nothing
+toAlpha (AddCedilla    ASCII.LowerC) = Just 'ç'
+toAlpha (AddCedilla    ASCII.UpperC) = Just 'Ç'
+toAlpha (AddGrave      ASCII.LowerA) = Just 'à'
+toAlpha (AddCircumflex ASCII.LowerA) = Just 'â'
+toAlpha (AddUmlaut     ASCII.LowerA) = Just 'ä'
+toAlpha (AddGrave      ASCII.LowerE) = Just 'è'
+toAlpha (AddAcute      ASCII.LowerE) = Just 'é'
+toAlpha (AddCircumflex ASCII.LowerE) = Just 'ê'
+toAlpha (AddUmlaut     ASCII.LowerE) = Just 'ë'
+toAlpha (AddCircumflex ASCII.LowerI) = Just 'î'
+toAlpha (AddUmlaut     ASCII.LowerI) = Just 'ï'
+toAlpha (AddCircumflex ASCII.LowerO) = Just 'ô'
+toAlpha (AddUmlaut     ASCII.LowerO) = Just 'ö'
+toAlpha (AddGrave      ASCII.LowerU) = Just 'ù'
+toAlpha (AddCircumflex ASCII.LowerU) = Just 'û'
+toAlpha (AddUmlaut     ASCII.LowerU) = Just 'ü'
+toAlpha (AddCedilla    mn          ) = Just $ chrm mn
+toAlpha (AddCircumflex mn          ) = Just $ chrm mn
+toAlpha (AddUmlaut     mn          ) = Just $ chrm mn
+toAlpha (AddAcute      mn          ) = Just $ chrm mn
+toAlpha (AddGrave      mn          ) = Just $ chrm mn
 toAlpha s
     | isMinitelChar fstC            = Just fstC
-    | s == accCedilla     ++ [0x63] = Just 'ç'
-    | s == accCedilla     ++ [0x27] = Just 'Ç'
-    | s == accGrave       ++ [0x61] = Just 'à'
-    | s == accCirconflexe ++ [0x61] = Just 'â'
-    | s == accUmlaut      ++ [0x61] = Just 'ä'
-    | s == accGrave       ++ [0x65] = Just 'è'
-    | s == accAcute       ++ [0x65] = Just 'é'
-    | s == accCirconflexe ++ [0x65] = Just 'ê'
-    | s == accUmlaut      ++ [0x65] = Just 'ë'
-    | s == accCirconflexe ++ [0x69] = Just 'î'
-    | s == accUmlaut      ++ [0x69] = Just 'ï'
-    | s == accCirconflexe ++ [0x6F] = Just 'ô'
-    | s == accUmlaut      ++ [0x6F] = Just 'ö'
-    | s == accGrave       ++ [0x75] = Just 'ù'
-    | s == accCirconflexe ++ [0x75] = Just 'û'
-    | s == accUmlaut      ++ [0x75] = Just 'ü'
-    | accCedilla     `isPrefixOf` s = Just lstC
-    | accGrave       `isPrefixOf` s = Just lstC
-    | accCirconflexe `isPrefixOf` s = Just lstC
-    | accUmlaut      `isPrefixOf` s = Just lstC
-    | accAcute       `isPrefixOf` s = Just lstC
     | otherwise                     = Nothing
-    where fstC = (chr . fromIntegral . head) s
-          lstC = (chr . fromIntegral . last) s
+    where fstC = (chrm . head) s
 
 -- | Converts an MString to a key
 toKey :: MString -> Key
-toKey [] = error "No key"
+toKey []                 = error "No key"
+toKey Cedilla            = KeyCedilla Plain
+toKey Grave              = KeyGrave Plain
+toKey Acute              = KeyAcute Plain
+toKey Circumflex         = KeyCircumflex Plain
+toKey Umlaut             = KeyDiaeresis Plain
+toKey Key.Up             = KeyUp Plain
+toKey Key.Down           = KeyDown Plain
+toKey Key.Left           = KeyLeft Plain
+toKey Key.Right          = KeyRight Plain
+toKey Key.ShiftUp        = KeyUp Shift
+toKey Key.ShiftDown      = KeyDown Shift
+toKey Key.ShiftLeft      = KeyLeft Shift
+toKey Key.ShiftRight     = KeyRight Shift
+toKey Key.CtrlLeft       = KeyLeft Ctrl
+toKey Key.Return         = KeyReturn Plain
+toKey Key.ShiftReturn    = KeyReturn Shift
+toKey Key.CtrlReturn     = KeyReturn Ctrl
+toKey Key.FuncSend       = KeySend Plain
+toKey Key.FuncPrev       = KeyPrev Plain
+toKey Key.FuncRepeat     = KeyRepeat Plain
+toKey Key.FuncGuide      = KeyGuide Plain
+toKey Key.FuncCancel     = KeyCancel Plain
+toKey Key.FuncTOC        = KeyTOC Plain
+toKey Key.FuncCorrection = KeyCorrection Plain
+toKey Key.FuncNext       = KeyNext Plain
+toKey Key.FuncConnection = KeyConnection Plain
 toKey s
     | isJust alpha           = KeyAlpha (fromJust alpha)
-    | s == keyUp             = KeyUp Plain
-    | s == keyDown           = KeyDown Plain
-    | s == keyLeft           = KeyLeft Plain
-    | s == keyRight          = KeyRight Plain
-    | s == keyShiftUp        = KeyUp Shift
-    | s == keyShiftDown      = KeyDown Shift
-    | s == keyShiftLeft      = KeyLeft Shift
-    | s == keyShiftRight     = KeyRight Shift
-    | s == ctrlLeft          = KeyLeft Ctrl
-    | s == keyReturn         = KeyReturn Plain
-    | s == keyShiftReturn    = KeyReturn Shift
-    | s == keyCtrlReturn     = KeyReturn Ctrl
-    | s == keyFuncSend       = KeySend Plain
-    | s == keyFuncPrev       = KeyPrev Plain
-    | s == keyFuncRepeat     = KeyRepeat Plain
-    | s == keyFuncGuide      = KeyGuide Plain
-    | s == keyFuncCancel     = KeyCancel Plain
-    | s == keyFuncTOC        = KeyTOC Plain
-    | s == keyFuncCorrection = KeyCorrection Plain
-    | s == keyFuncNext       = KeyNext Plain
-    | s == keyFuncConnection = KeyConnection Plain
-    | s == accCedilla        = KeyCedilla Plain
-    | s == accGrave          = KeyGrave Plain
-    | s == accAcute          = KeyAcute Plain
-    | s == accCirconflexe    = KeyCircumflex Plain
-    | s == accUmlaut         = KeyDiaeresis Plain
     | otherwise              = error $ "Unsupported key: " ++ show s
     where alpha = toAlpha s
 

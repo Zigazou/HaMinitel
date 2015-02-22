@@ -11,7 +11,7 @@ This module allows to send photo videotex.
 -}
 module Minitel.Generate.PhotoVideotex ( mJPEG ) where
 
-import           Minitel.Constants.Constants
+import qualified Minitel.Constants.C0 as C0
 import           Minitel.Type.MNatural (mnat)
 import           Minitel.Type.MString (MString)
 import           Minitel.Type.MLargeNumber (showLargeNumber)
@@ -63,7 +63,7 @@ mPictureControlEntity l pid = mPictureCodingDelimiter
 
 -- | Generate a picture coding delimiter.
 mPictureCodingDelimiter :: MString
-mPictureCodingDelimiter = [eESC, 0x70]
+mPictureCodingDelimiter = [C0.ESC, 0x70]
 
 -- | Generate the coding method identifier given a picture identifier.
 mCodingMethodIdentifier :: PictureIdentifier -> MString

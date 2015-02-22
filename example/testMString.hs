@@ -6,7 +6,7 @@ import Minitel.Generate.Generator
 import Minitel.Type.Ability
 import Minitel.Type.MString
 import Minitel.Constants.Abilities
-import Minitel.Constants.Constants
+import qualified Minitel.Constants.C0 as C0
 
 import System.Hardware.Serialport
 
@@ -15,17 +15,17 @@ mInfo (Nothing, a, c) = mInfo (Just makerUnknown, a, c)
 mInfo (m, Nothing, c) = mInfo (m, Just abilityUnknown, c)
 mInfo (Just m, Just a, _) =
     [ mString VideoTex "Maker"
-    , [eAPR, eAPD]
+    , [C0.APR, C0.APD]
     , mRepeat 40 0x60
-    , [eAPD]
+    , [C0.APD]
     , mSize DoubleWidth DoubleHeight
     , mString VideoTex (makerName m)
-    , [eAPR, eAPD, eAPD, eAPD]
+    , [C0.APR, C0.APD, C0.APD, C0.APD]
     , mSize SimpleWidth SimpleHeight
     , mString VideoTex "Model"
-    , [eAPR, eAPD]
+    , [C0.APR, C0.APD]
     , mRepeat 40 0x60
-    , [eAPD]
+    , [C0.APD]
     , mSize DoubleWidth DoubleHeight
     , mString VideoTex (abilityName a)
     ]

@@ -29,7 +29,7 @@ import Minitel.Type.Videotex
        , CharHeight (DoubleHeight)
        , Color (Green, Yellow, White)
        )
-import Minitel.Constants.Constants (aCR, aLF)
+import qualified Minitel.Constants.ASCII as ASCII
 import Text.Printf (printf)
 import System.IO (hFlush, stdout)
 
@@ -49,8 +49,8 @@ controls =
 --   wide).
 friendly :: MNat -> String
 friendly mn
-    | mn < 0x20 = printf " %s-%02x "   (controls !! mni) mni
-    | otherwise = printf " [%c]-%02x " mni mni
+    | mn < ASCII.Space = printf " %s-%02x "   (controls !! mni) mni
+    | otherwise        = printf " [%c]-%02x " mni mni
     where mni = fromMNat mn
 
 -- | The endless Minitel listener
@@ -99,7 +99,7 @@ message =
     
     , mForeground White
     ]
-    where crlf = [ aCR, aLF ]
+    where crlf = [ ASCII.CR, ASCII.LF ]
 
 main :: IO ()
 main = do

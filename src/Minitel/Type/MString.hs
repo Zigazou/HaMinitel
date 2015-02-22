@@ -1,3 +1,4 @@
+{-# LANGUAGE PatternSynonyms #-}
 {-|
 Module      : MString
 Description : Sequence of values for the Minitel
@@ -25,7 +26,10 @@ where
 import Data.Char (ord, isAscii)
 import Minitel.Type.MNatural (MNat, mnat)
 
-import Minitel.Constants.Constants
+import qualified Minitel.Constants.ASCII as ASCII
+import qualified Minitel.Constants.C0    as C0
+import qualified Minitel.Constants.SSCFS as SSCFS
+import Minitel.Constants.Accents
 import Minitel.Constants.MUnicode
 
 import Control.Applicative ((<|>), (<$>), (<*>))
@@ -60,19 +64,19 @@ showInt i = map (mnat . ord) $ show i
 -- | Check if an MString received from the Minitel is complete. For example,
 --   if the Minitel sent us an 0x19, it should be followed by another value.
 completeReturn :: MString -> Bool
-completeReturn []                 = False
-completeReturn [0x19]             = False -- eSS2
-completeReturn [0x13]             = False -- aDC3
-completeReturn [0x1b]             = False -- eESC
-completeReturn [0x1b, 0x5b]       = False -- eESC, eCSI
-completeReturn [0x1b, 0x5b, 0x32] = False -- eESC, eCSI, 0x32
-completeReturn [0x1b, 0x5b, 0x34] = False -- eESC, eCSI, 0x34
-completeReturn [0x19, 0x4b]       = False -- eSS2, 0x4b ; cedilla
-completeReturn [0x19, 0x41]       = False -- eSS2, 0x41 ; grave
-completeReturn [0x19, 0x42]       = False -- eSS2, 0x42 ; acute
-completeReturn [0x19, 0x43]       = False -- eSS2, 0x43 ; circonflex
-completeReturn [0x19, 0x48]       = False -- eSS2, 0x48 ; umlaut
-completeReturn _                  = True
+completeReturn []                        = False
+completeReturn [C0.SS2]                  = False
+completeReturn [ASCII.DC3]               = False
+completeReturn [C0.ESC]                  = False
+completeReturn [C0.ESC, SSCFS.CSI]       = False
+completeReturn [C0.ESC, SSCFS.CSI, 0x32] = False
+completeReturn [C0.ESC, SSCFS.CSI, 0x34] = False
+completeReturn Cedilla                   = False
+completeReturn Grave                     = False
+completeReturn Acute                     = False
+completeReturn Circumflex                = False
+completeReturn Umlaut                    = False
+completeReturn _                         = True
 
 -- | Translates a unicode character to its VideoTex counterpart. Standard ASCII
 --   characters are kept as the Minitel is based upon it. If the character has
@@ -80,42 +84,42 @@ completeReturn _                  = True
 --   outputted MString
 toVideotex :: Char -> MString
 toVideotex c
-    | c == poundSign                       = [eSS2, 0x23]
-    | c == degreeSign                      = [eSS2, 0x30]
-    | c == plusMinusSign                   = [eSS2, 0x31]
-    | c == leftwardsArrow                  = [eSS2, 0x2C]
-    | c == upwardsArrow                    = [eSS2, 0x2D]
-    | c == rightwardsArrow                 = [eSS2, 0x2E]
-    | c == downwardsArrow                  = [eSS2, 0x2F]
-    | c == vulgarFractionOneQuarter        = [eSS2, 0x3C]
-    | c == vulgarFractionOneHalf           = [eSS2, 0x3D]
-    | c == vulgarFractionThreeQuarters     = [eSS2, 0x3E]
-    | c == latinSmallLetterCWithCedilla    = accCedilla     ++ [0x63]
-    | c == rightSingleQuotationMark        = accCedilla     ++ [0x27]
-    | c == latinSmallLetterAWithGrave      = accGrave       ++ [0x61]
-    | c == latinSmallLetterAWithAcute      = accAcute       ++ [0x61]
-    | c == latinSmallLetterAWithCircumflex = accCirconflexe ++ [0x61]
-    | c == latinSmallLetterAWithDiaeresis  = accUmlaut      ++ [0x61]
-    | c == latinSmallLetterEWithGrave      = accGrave       ++ [0x65]
-    | c == latinSmallLetterEWithAcute      = accAcute       ++ [0x65]
-    | c == latinSmallLetterEWithCircumflex = accCirconflexe ++ [0x65]
-    | c == latinSmallLetterEWithDiaeresis  = accUmlaut      ++ [0x65]
-    | c == latinSmallLetterIWithGrave      = accGrave       ++ [0x69]
-    | c == latinSmallLetterIWithAcute      = accAcute       ++ [0x69]
-    | c == latinSmallLetterIWithCircumflex = accCirconflexe ++ [0x69]
-    | c == latinSmallLetterIWithDiaeresis  = accUmlaut      ++ [0x69]
-    | c == latinSmallLetterOWithGrave      = accGrave       ++ [0x6F]
-    | c == latinSmallLetterOWithAcute      = accAcute       ++ [0x6F]
-    | c == latinSmallLetterOWithCircumflex = accCirconflexe ++ [0x6F]
-    | c == latinSmallLetterOWithDiaeresis  = accUmlaut      ++ [0x6F]
-    | c == latinSmallLetterUWithGrave      = accGrave       ++ [0x75]
-    | c == latinSmallLetterUWithAcute      = accAcute       ++ [0x75]
-    | c == latinSmallLetterUWithCircumflex = accCirconflexe ++ [0x75]
-    | c == latinSmallLetterUWithDiaeresis  = accUmlaut      ++ [0x75]
-    | c == latinCapitalLigatureOE          = [eSS2, 0x6A]
-    | c == latinSmallLigatureOE            = [eSS2, 0x7A]
-    | c == latinSmallLetterSharpS          = [eSS2, 0x7B]
-    | c == greekSmallLetterBeta            = [eSS2, 0x7B]
+    | c == poundSign                       = [C0.SS2, 0x23]
+    | c == degreeSign                      = [C0.SS2, 0x30]
+    | c == plusMinusSign                   = [C0.SS2, 0x31]
+    | c == leftwardsArrow                  = [C0.SS2, 0x2C]
+    | c == upwardsArrow                    = [C0.SS2, 0x2D]
+    | c == rightwardsArrow                 = [C0.SS2, 0x2E]
+    | c == downwardsArrow                  = [C0.SS2, 0x2F]
+    | c == vulgarFractionOneQuarter        = [C0.SS2, 0x3C]
+    | c == vulgarFractionOneHalf           = [C0.SS2, 0x3D]
+    | c == vulgarFractionThreeQuarters     = [C0.SS2, 0x3E]
+    | c == latinSmallLetterCWithCedilla    = AddCedilla    ASCII.LowerC
+    | c == rightSingleQuotationMark        = AddCedilla    ASCII.Quote
+    | c == latinSmallLetterAWithGrave      = AddGrave      ASCII.LowerA
+    | c == latinSmallLetterAWithAcute      = AddAcute      ASCII.LowerA
+    | c == latinSmallLetterAWithCircumflex = AddCircumflex ASCII.LowerA
+    | c == latinSmallLetterAWithDiaeresis  = AddUmlaut     ASCII.LowerA
+    | c == latinSmallLetterEWithGrave      = AddGrave      ASCII.LowerE
+    | c == latinSmallLetterEWithAcute      = AddAcute      ASCII.LowerE
+    | c == latinSmallLetterEWithCircumflex = AddCircumflex ASCII.LowerE
+    | c == latinSmallLetterEWithDiaeresis  = AddUmlaut     ASCII.LowerE
+    | c == latinSmallLetterIWithGrave      = AddGrave      ASCII.LowerI
+    | c == latinSmallLetterIWithAcute      = AddAcute      ASCII.LowerI
+    | c == latinSmallLetterIWithCircumflex = AddCircumflex ASCII.LowerI
+    | c == latinSmallLetterIWithDiaeresis  = AddUmlaut     ASCII.LowerI
+    | c == latinSmallLetterOWithGrave      = AddGrave      ASCII.LowerO
+    | c == latinSmallLetterOWithAcute      = AddAcute      ASCII.LowerO
+    | c == latinSmallLetterOWithCircumflex = AddCircumflex ASCII.LowerO
+    | c == latinSmallLetterOWithDiaeresis  = AddUmlaut     ASCII.LowerO
+    | c == latinSmallLetterUWithGrave      = AddGrave      ASCII.LowerU
+    | c == latinSmallLetterUWithAcute      = AddAcute      ASCII.LowerU
+    | c == latinSmallLetterUWithCircumflex = AddCircumflex ASCII.LowerU
+    | c == latinSmallLetterUWithDiaeresis  = AddUmlaut     ASCII.LowerU
+    | c == latinCapitalLigatureOE          = [C0.SS2, 0x6A]
+    | c == latinSmallLigatureOE            = [C0.SS2, 0x7A]
+    | c == latinSmallLetterSharpS          = [C0.SS2, 0x7B]
+    | c == greekSmallLetterBeta            = [C0.SS2, 0x7B]
     | isAscii c                            = [(fromIntegral . ord) c]
     | otherwise                            = []
 
@@ -125,15 +129,16 @@ toVideotex c
 --   simply ignored and suppressed from the outputted MString
 toTerminal :: Char -> MString
 toTerminal c
-    | c == poundSign                       = [0x0E, 0x23, 0x0F]
-    | c == degreeSign                      = [0x0E, 0x5B, 0x0F]
-    | c == latinSmallLetterCWithCedilla    = [0x0E, 0x5C, 0x0F]
+    | c == poundSign                       = [C0.SO, 0x23, C0.SI]
+    | c == degreeSign                      = [C0.SO, 0x5B, C0.SI]
+    | c == latinSmallLetterCWithCedilla    = [C0.SO, 0x5C, C0.SI]
     | c == rightSingleQuotationMark        = [0x27]
-    | c == graveAccent                     = [0x60]
-    | c == sectionSign                     = [0x0E, 0x5D, 0x0F]
-    | c == latinSmallLetterAWithGrave      = [0x0E, 0x40, 0x0F]
-    | c == latinSmallLetterEWithGrave      = [0x0E, 0x7F, 0x0F]
-    | c == latinSmallLetterEWithAcute      = [0x0E, 0x7B, 0x0F]
-    | c == latinSmallLetterUWithGrave      = [0x0E, 0x7C, 0x0F]
+    | c == graveAccent                     = [ASCII.BackTick]
+    | c == sectionSign                     = [C0.SO, 0x5D, C0.SI]
+    | c == latinSmallLetterAWithGrave      = [C0.SO, 0x40, C0.SI]
+    | c == latinSmallLetterEWithGrave      = [C0.SO, 0x7F, C0.SI]
+    | c == latinSmallLetterEWithAcute      = [C0.SO, 0x7B, C0.SI]
+    | c == latinSmallLetterUWithGrave      = [C0.SO, 0x7C, C0.SI]
     | isAscii c                            = [(fromIntegral . ord) c]
     | otherwise                            = []
+

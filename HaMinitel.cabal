@@ -43,7 +43,14 @@ library
                      Minitel.Type.MLargeNumber
                      Minitel.Minitel
                      Minitel.Constants.Abilities
-                     Minitel.Constants.Constants
+                     Minitel.Constants.CharacterSet
+                     Minitel.Constants.ASCII
+                     Minitel.Constants.C0
+                     Minitel.Constants.SSCFS
+                     Minitel.Constants.PSCFS
+                     Minitel.Constants.Accents
+                     Minitel.Constants.Protocol
+                     Minitel.Constants.CSI
                      Minitel.Constants.Photo
                      Minitel.Constants.MUnicode
                      Minitel.Key

@@ -36,6 +36,8 @@ import Minitel.UI.Interface (interface, focusables)
 import Minitel.UI.Dispatcher (runInterface)
 import Minitel.UI.TextField (TextField, textField, getString)
 
+import qualified Minitel.Constants.ASCII as ASCII
+
 -- | Defines the background of our textual user interface
 formBackground :: [MString]
 formBackground =
@@ -61,7 +63,7 @@ formBackground =
 
     -- Draws a line using a character
     , mLocate        3 6
-    , mRepeat        34 0x5f
+    , mRepeat        34 ASCII.UnderScore
 
     -- Label for the first name field
     , mLocate        3 8

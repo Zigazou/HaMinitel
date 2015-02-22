@@ -16,10 +16,11 @@ whose values are [0..127]. The MNatN data type allows to use such numbers as if
 they were standard Int while ensuring that we use only 7 bits.
 -}
 
-module Minitel.Type.MNatural (MNat, MNatN, mnat, fromMNat) where
+module Minitel.Type.MNatural (MNat, MNatN, mnat, fromMNat, chrm) where
 
 import GHC.TypeLits (KnownNat, Nat, natVal)
 import Data.Proxy (Proxy (Proxy))
+import Data.Char (chr)
 
 -- | The MNatN type. The constructor is hidden.
 newtype MNatN (lo :: Nat) (hi :: Nat) = MakeMNat Int
@@ -35,6 +36,10 @@ instance (KnownNat lo, KnownNat hi) => Bounded (MNatN lo hi) where
 -- | Converts an MNatN into an Int
 fromMNat :: (KnownNat lo, KnownNat hi) => MNatN lo hi -> Int
 fromMNat (MakeMNat i) = i
+
+-- | Translate MNat to a char
+chrm :: MNat -> Char
+chrm = chr . fromMNat
 
 -- | Converts an Int into an MNatN
 mnat :: (KnownNat lo, KnownNat hi) => Int -> MNatN lo hi

@@ -14,7 +14,7 @@ module Minitel.Generate.MDesign (
 ) where
 
 import Data.List.Split (chunksOf)
-import Minitel.Constants.Constants
+import qualified Minitel.Constants.ASCII as ASCII
 import Minitel.Type.MNatural (MNat)
 import Minitel.Type.MString (MString)
 import Minitel.Type.Videotex (CharSet (G'0, G'1)) 
@@ -36,8 +36,8 @@ charDesign design
 -- | Chooses which character set will be redefined. Useful only for the
 --   mRedesign function.
 mDefineSet :: CharSet -> MString
-mDefineSet G'0 = [aUS, 0x23, 0x20, 0x20, 0x20, 0x42, 0x49]
-mDefineSet G'1 = [aUS, 0x23, 0x20, 0x20, 0x20, 0x43, 0x49]
+mDefineSet G'0 = [ASCII.US, 0x23, 0x20, 0x20, 0x20, 0x42, 0x49]
+mDefineSet G'1 = [ASCII.US, 0x23, 0x20, 0x20, 0x20, 0x43, 0x49]
 mDefineSet _   = error "G0 or G1 charsets cannot be redefined"
 
 -- | Generate the MString used to redefine one character. Useful only for the
@@ -59,7 +59,7 @@ mDesigns = map mDesign
 mRedesign :: MNat -> [CharDesign] -> CharSet -> MString
 mRedesign fromChar designs charset =
     mDefineSet charset
-    ++ [aUS, 0x23, fromChar]
+    ++ [ASCII.US, 0x23, fromChar]
     ++ (concat . mDesigns) designs
-    ++ [aUS, 0x41, 0x41]
+    ++ [ASCII.US, 0x41, 0x41]
     ++ mUseSet charset
