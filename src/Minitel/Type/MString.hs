@@ -132,7 +132,7 @@ toTerminal c
     | c == poundSign                       = [C0.SO, 0x23, C0.SI]
     | c == degreeSign                      = [C0.SO, 0x5B, C0.SI]
     | c == latinSmallLetterCWithCedilla    = [C0.SO, 0x5C, C0.SI]
-    | c == rightSingleQuotationMark        = [0x27]
+    | c == rightSingleQuotationMark        = [ASCII.Quote]
     | c == graveAccent                     = [ASCII.BackTick]
     | c == sectionSign                     = [C0.SO, 0x5D, C0.SI]
     | c == latinSmallLetterAWithGrave      = [C0.SO, 0x40, C0.SI]

@@ -21,7 +21,8 @@ module Minitel.Minitel
 , readBMString
 , readNMString
 , waitFor
-, baseSettings
+, standardSettings
+, photoSettings
 , spBitRate
 , setSpeed
 , waitForMinitel
@@ -56,7 +57,7 @@ import           System.Hardware.Serialport
                     )
                  , CommSpeed(CommSpeed, CS300, CS1200, CS4800, CS9600)
                  , StopBits(One)
-                 , Parity(Even)
+                 , Parity(Even, NoParity)
                  , FlowControl(NoFlowControl)
                  , openSerial
                  , send
@@ -200,10 +201,10 @@ waitFor delay getter' = do
 
     return result
 
--- | Base settings for the serial port on which is connected a Minitel.
+-- | Standard settings for the serial port on which is connected a Minitel.
 --   Standard configuration is 1200 bps, 7 bits, 1 stop, even parity.
-baseSettings :: SerialPortSettings
-baseSettings = SerialPortSettings
+standardSettings :: SerialPortSettings
+standardSettings = SerialPortSettings
     { commSpeed   = CS1200
     , bitsPerWord = 7
     , stopb       = One
@@ -211,6 +212,20 @@ baseSettings = SerialPortSettings
     , flowControl = NoFlowControl
     , timeout     = 10
     }
+
+-- | Settings for the serial port on which is connected a Minitel when in
+--   photographic mode.
+--   Configuration is 9600 bps, 8 bits, 1 stop, no parity.
+photoSettings :: SerialPortSettings
+photoSettings = SerialPortSettings
+    { commSpeed   = CS9600
+    , bitsPerWord = 8
+    , stopb       = One
+    , parity      = NoParity
+    , flowControl = NoFlowControl
+    , timeout     = 10
+    }
+
 
 -- | Translates bit rate to SerialPort types
 spBitRate :: Int -> CommSpeed
@@ -227,7 +242,7 @@ setSpeed m rate = do
     m <<< mSpeed rate
     threadDelay 500000
     killMinitel m
-    let settings = baseSettings { commSpeed = spBitRate rate }
+    let settings = standardSettings { commSpeed = spBitRate rate }
     minitel "" settings
 
 -- | waitForMinitel waits till the Minitel has displayed everything

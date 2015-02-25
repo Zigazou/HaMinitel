@@ -36,9 +36,12 @@ where
 import Minitel.Constants.CharacterSet
 import Minitel.Constants.CSI
 import qualified Minitel.Constants.ASCII as ASCII
+import qualified Minitel.Constants.ANSI  as ANSI
 import qualified Minitel.Constants.C0    as C0
+import qualified Minitel.Constants.SSCFS as SSCFS
+import qualified Minitel.Constants.PSCFS as PSCFS
 import Minitel.Type.MNatural (MNat, mnat, fromMNat)
-import Minitel.Type.MString (MString, showInt, toVideotex, toTerminal)
+import Minitel.Type.MString (MString, toVideotex, toTerminal)
 import Minitel.Type.Videotex
        ( MMode (VideoTex)
        , ToMColor
@@ -84,13 +87,13 @@ mMove 0 0 = []
 mMove 0 y | y > 127 || y < -127 = error "y move too big"
           | y >= -4 && y <= -1  = replicate (abs y) C0.APU
           | y >= 1  && y <=  4  = replicate y C0.APD
-          | y <  0              = CSIx $ (showInt . mnat) (abs y) ++ [0x42]
-          | y >  0              = CSIx $ (showInt . mnat) y ++ [0x41]
+          | y <  0              = mCSI ANSI.CUD [mnat $ abs y]
+          | y >  0              = mCSI ANSI.CUU [mnat y]
 mMove x 0 | x > 127 || x < -127 = error "x move too big"
           | x >= -4 && x <= -1  = replicate (abs x) C0.APB
           | x >= 1  && x <=  4  = replicate x C0.APF
-          | x <  0              = CSIx $ (showInt . mnat) (abs x) ++ [0x43]
-          | x >  0              = CSIx $ (showInt . mnat) x ++ [0x44]
+          | x <  0              = mCSI ANSI.CUF [mnat $ abs x]
+          | x >  0              = mCSI ANSI.CUB [mnat x]
 mMove x y = mMove x 0 ++ mMove 0 y
 
 -- | Move cursor to the start of the current line.
@@ -100,34 +103,34 @@ mGotoStartOfLine = [C0.APR]
 -- | Change character size. The first argument is the width, the second the
 --   height
 mSize :: CharWidth -> CharHeight -> MString
-mSize SimpleWidth SimpleHeight = [C0.ESC, 0x4c + 0]
-mSize SimpleWidth DoubleHeight = [C0.ESC, 0x4c + 1]
-mSize DoubleWidth SimpleHeight = [C0.ESC, 0x4c + 2]
-mSize DoubleWidth DoubleHeight = [C0.ESC, 0x4c + 3]
+mSize SimpleWidth SimpleHeight = [C0.ESC, SSCFS.NSZ]
+mSize SimpleWidth DoubleHeight = [C0.ESC, SSCFS.DBH]
+mSize DoubleWidth SimpleHeight = [C0.ESC, SSCFS.DBW]
+mSize DoubleWidth DoubleHeight = [C0.ESC, SSCFS.DBS]
 
 -- | Enable or disable characters underscoring. No underscoring by default.
 mUnderscore :: Bool -> MString
-mUnderscore True  = [C0.ESC, 0x5a]
-mUnderscore False = [C0.ESC, 0x59]
+mUnderscore True  = [C0.ESC, SSCFS.STL]
+mUnderscore False = [C0.ESC, SSCFS.SPL]
 
 -- | Enable or disable characters blinking. No blinking by default.
 mBlink :: Bool -> MString
-mBlink True  = [C0.ESC, 0x48]
-mBlink False = [C0.ESC, 0x49]
+mBlink True  = [C0.ESC, SSCFS.FSH]
+mBlink False = [C0.ESC, SSCFS.STD]
 
 -- | Enable or disable reverse video effect. No effect by default
 mReverse :: Bool -> MString
-mReverse True  = [C0.ESC, 0x5d]
-mReverse False = [C0.ESC, 0x5c]
+mReverse True  = [C0.ESC, PSCFS.IPO]
+mReverse False = [C0.ESC, PSCFS.NPO]
 
 -- | Clear something on the screen relatively to the current cursor position
 mClear :: WhatToClear -> MString
 mClear Everything       = [C0.CS]
 mClear EndOfLine        = [C0.CAN]
-mClear EndOfScreen      = CSI1 0x4a
-mClear StartOfScreen    = CSI2 0x31 0x4a
-mClear StartOfLine      = CSI2 0x31 0x4b
-mClear Line             = CSI2 0x32 0x4b
+mClear EndOfScreen      = mCSI ANSI.ED [{- ANSI.CursorToEnd -}]
+mClear StartOfScreen    = mCSI ANSI.ED [ANSI.BeginningToCursor]
+mClear StartOfLine      = mCSI ANSI.EL [ANSI.BeginningToCursor]
+mClear Line             = mCSI ANSI.EL [ANSI.AllCharacters]
 mClear StatusLine       = mLocate 0 1 ++  mClear EndOfLine ++ [C0.APD]
 mClear ReallyEverything = mClear Everything ++ mClear StatusLine
 
@@ -149,8 +152,8 @@ mBeep = [ASCII.BEL]
 --   all columns. When removing a column, characters on its right are moved
 --   on the left. When removing a row, characters below it are moved upward.
 mRemove :: WhatToRemove -> MNat -> MString
-mRemove Column count = CSIx $ showInt count ++ [0x50]
-mRemove Row    count = CSIx $ showInt count ++ [0x4d]
+mRemove Column count = mCSI ANSI.DCH [count]
+mRemove Row    count = mCSI ANSI.DL  [count]
 
 -- | Inserts a number of columns or rows on the Minitel screen. Note that
 --   inserting columns only concerns the current line. Inserting row concerns
@@ -158,10 +161,10 @@ mRemove Row    count = CSIx $ showInt count ++ [0x4d]
 --   on the right. When inserting a row, characters below it are moved
 --   downward.
 mInsert :: WhatToInsert -> MNat -> MString
-mInsert Column count = CSI2 0x34 0x68
+mInsert Column count = mCSI ANSI.SM [ANSI.IRM]
                     ++ replicate (fromMNat count) ASCII.Space
-                    ++ CSI2 0x34 0x6c
-mInsert Row    count = CSIx $ showInt count ++ [0x4c]
+                    ++ mCSI ANSI.RM [ANSI.IRM]
+mInsert Row    count = mCSI ANSI.IL [count]
 
 -- | Enable or disable the semigraphic mode. Disabled by default.
 mSemigraphic :: Bool -> MString

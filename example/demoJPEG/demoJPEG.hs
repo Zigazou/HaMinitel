@@ -5,22 +5,11 @@ import Minitel.Generate.Configuration
 import Minitel.Generate.Generator
 import Minitel.Generate.PhotoVideotex
 
-import System.Hardware.Serialport
-
 import qualified Data.ByteString.Lazy.Char8 as BS
 
 main :: IO ()
 main = do
-    let mySettings = SerialPortSettings
-            { commSpeed   = CS9600
-            , bitsPerWord = 8
-            , stopb       = One
-            , parity      = NoParity
-            , flowControl = NoFlowControl
-            , timeout     = 10
-            }
-
-    m <- minitel "/dev/ttyUSB0" mySettings
+    m <- minitel "/dev/ttyUSB0" photoSettings
 
     mapM_ (mCall m) [ mExtendedKeyboard  True
                     , mCursorKeys        True
